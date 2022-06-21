@@ -30,7 +30,7 @@ const mutate = async (weaponId) => {
 	await warpgate.mutate(token.document, {
 		token: {light: {bright: 20, dim: 40, color: "#e05d06", "animation.type": "torch"}},
 		embedded: {Item: {[weaponId]: {data: {"properties.mgc": true, "damage.parts": damageParts}}}}
-	}, {}, {name, comparisonKeys: {Item: "id"}});
+	}, {}, {name, comparisonKeys: {Item: "_id"}});
 }
 
 /* exactly one weapon */
