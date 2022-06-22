@@ -22,12 +22,10 @@ const updates = {
 		"data.details.cr": actor.data.data.details.level,
 		"flags.world.fathomless-tentacle": actor.id
 	},
-	embedded: {Item: {"Fathomless Tentacle": {
-			"data.damage.parts": [[
-				Roll.replaceFormulaData(item.data.data.damage.parts[0][0], actor.getRollData()),
-				item.data.data.damage.parts[0][1]
-			]]
-	}}}
+	embedded: {Item: {"Fathomless Tentacle": {"data.damage.parts": [[
+		Roll.replaceFormulaData(item.data.data.damage.parts[0][0], actor.getRollData()),
+		item.data.data.damage.parts[0][1]
+	]]}}}
 }
 
 // now spawn the actor:
