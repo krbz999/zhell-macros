@@ -1,3 +1,5 @@
+// Credit to @LukasPrism for the warpgate targeting.
+
 // macro to create loot, either in an item pile or on an actor.
 // can additionally add to the sidebar on creation.
 
