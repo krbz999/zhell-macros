@@ -57,9 +57,9 @@ new Dialog({content, title: "Create Loot", buttons: {go: {
 		// construct item data.
 		const name = html[0].querySelector("input[id=name]").value;
 		const value = html[0].querySelector("textarea[id=description]").value;
-		const price = html[0].querySelector("input[id=price]").value;
-		const quantity = html[0].querySelector("input[id=quantity]").value;
-		const weight = html[0].querySelector("input[id=weight]").value;
+		const price = Number(html[0].querySelector("input[id=price]").value);
+		const quantity = Number(html[0].querySelector("input[id=quantity]").value);
+		const weight = Number(html[0].querySelector("input[id=weight]").value);
 		
 		const itemData = {name, img, type: "loot", data: {description: {value}, price, quantity, rarity: "common", weight}}
 		
