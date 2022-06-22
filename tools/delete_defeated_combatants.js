@@ -13,4 +13,4 @@ const ids = game.combat.combatants.filter(i => {
 }).map(i => i.id);
 
 // yeet 'em.
-await game.game.combat.deleteEmbeddedDocuments("Combatant", ids);
+await game.combat.deleteEmbeddedDocuments("Combatant", ids);
