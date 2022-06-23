@@ -24,6 +24,6 @@ await RollTable.create({
 	name: tableName,
 	results,
 	img: tableImg,
-    description: tableDescription,
-    formula: `1d${results.length}`
+	description: tableDescription,
+	formula: `1d${results.length}`
 });
