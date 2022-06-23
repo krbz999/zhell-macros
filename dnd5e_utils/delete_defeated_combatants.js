@@ -5,10 +5,8 @@
 const ids = game.combat.combatants.filter(i => {
   // filter out player-owned combatants.
   if(i.hasPlayerOwner) return false;
-
   // filter out living combatants
   if(getProperty(i.token, "actor.data.data.attributes.hp.value") > 0) return false;
-  
   return true;
 }).map(i => i.id);
 
