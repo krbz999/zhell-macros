@@ -1,6 +1,7 @@
 // Goodberry + Disciple of Life.
 // required modules: itemacro.
 
+// whether or not actor is also a Life Cleric.
 const disciple_of_life = true;
 
 
@@ -12,14 +13,15 @@ if(!roll) return;
 const content = roll.data.content;
 const level = Number(content.charAt(content.indexOf("data-spell-level") + 18));
 const bonus = disciple_of_life ? level + 2 : 0;
+const name = disciple_of_life ? `Goodberry (${nth(level)})` : "Goodberry";
 
 // find existing goodberry
-const existingItem = actor.items.getName(`Goodberry (${nth(level)})`);
+const existingItem = actor.itemTypes.consumable.find(i => i.name === name);
 if(!!existingItem) await existingItem.update({"data.quantity": existingItem.data.data.quantity + 10});
 
 // else create new goodberry stack
 else await actor.createEmbeddedDocuments("Item", [{
-	name: `Goodberry (${nth(level)})`,
+	name,
 	type: "consumable",
 	img: "icons/consumables/food/berries-ration-round-red.webp",
 	data: {
