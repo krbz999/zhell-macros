@@ -11,7 +11,7 @@ const useFloor = 20 >= floor && floor > 1;
 const useCeil = 20 > ceil && ceil > 0;
 if(useFloor) msg.dice[0].modifiers.push(`min${floor}`);
 if(useCeil) msg.dice[0].modifiers.push(`max${ceil}`);
-msg._formula = msg._formula.replace("d20", "d20" + (useFloor ? `min${floor}` : "") + (useCeil > 0 ? `max${ceil}` : ""))
+msg._formula = msg._formula.replace("d20", "d20" + (useFloor ? `min${floor}` : "") + (useCeil > 0 ? `max${ceil}` : ""));
 for(let d20 of msg.dice[0].results){
   if(useFloor && d20.result < floor){
     d20.rerolled = true;
@@ -24,7 +24,9 @@ for(let d20 of msg.dice[0].results){
 }
 msg._total = (await new Roll(msg.result).evaluate({async: true})).total;
 
-await msg.toMessage({speaker: ChatMessage.getSpeaker({
-  actor: token.actor,
-  token: token.document
-})});
+await msg.toMessage({
+  speaker: ChatMessage.getSpeaker({
+    actor: token.actor,
+    token: token.document
+  })
+});
