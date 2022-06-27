@@ -4,15 +4,29 @@
 // required modules: requestor.
 
 const action = async () => {
-  const tok = token ?? game.user.character?.getActiveTokens()[0];
-  if(!tok) return ui.notifications.warn("Need a token.");
-  if(tok.combatant && tok.combatant.initiative !== null) return;
-  const {formula} = await tok.actor.rollAbilityTest("dex", {
-    chatMessage: false, event, parts: [tok.actor.data.data.attributes.init.total]
-  });
-  if(!formula) return;
-  if(!tok.combatant) await tok.toggleCombat();
-  await tok.actor.rollInitiative({initiativeOptions: {formula}});
+  if(!game.user.isGM){
+    const tok = token ?? game.user.character?.getActiveTokens()[0];
+    if(!tok) return ui.notifications.warn("Need a token.");
+    if(tok.combatant && tok.combatant.initiative !== null) return;
+    const {formula} = await tok.actor.rollAbilityTest("dex", {
+      chatMessage: false, event, parts: [tok.actor.data.data.attributes.init.value]
+    });
+    if(!formula) return;
+    if(!tok.combatant) await tok.toggleCombat();
+    await tok.actor.rollInitiative({initiativeOptions: {formula}});
+  }else{
+    const toks = canvas.tokens.controlled;
+    if(toks.length < 1) return ui.notifications.warn("Need a token.");
+    for(tok of toks){
+      if(tok.combatant && tok.combatant.initiative !== null) continue;
+      const {formula} = await tok.actor.rollAbilityTest("dex", {
+        chatMessage: false, event, parts: [tok.actor.data.data.attributes.init.value]
+      });
+      if(!formula) continue;
+      if(!tok.combatant) await tok.toggleCombat();
+      await tok.actor.rollInitiative({initiativeOptions: {formula}});
+    }
+  }
 }
 const description = `<p style="text-align:center">Roll initiative!</p>`;
 const img = "icons/skills/melee/weapons-crossed-swords-yellow.webp";
