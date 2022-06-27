@@ -8,23 +8,23 @@ const action = async () => {
     const tok = token ?? game.user.character?.getActiveTokens()[0];
     if(!tok) return ui.notifications.warn("Need a token.");
     if(tok.combatant && tok.combatant.initiative !== null) return;
-    const {formula} = await tok.actor.rollAbilityTest("dex", {
-      chatMessage: false, event, parts: [tok.actor.data.data.attributes.init.value]
+    const {total} = await tok.actor.rollAbilityTest("dex", {
+      chatMessage: true, event, parts: [tok.actor.data.data.attributes.init.value], flavor: `${tok.name} rolls for initiative!`
     });
-    if(!formula) return;
+    if(total === undefined || total === null) return;
     if(!tok.combatant) await tok.toggleCombat();
-    await tok.actor.rollInitiative({initiativeOptions: {formula}});
+    await tok.combatant.update({initiative: total});
   }else{
     const toks = canvas.tokens.controlled;
     if(toks.length < 1) return ui.notifications.warn("Need a token.");
     for(tok of toks){
       if(tok.combatant && tok.combatant.initiative !== null) continue;
-      const {formula} = await tok.actor.rollAbilityTest("dex", {
+      const {total} = await tok.actor.rollAbilityTest("dex", {
         chatMessage: false, event, parts: [tok.actor.data.data.attributes.init.value]
       });
-      if(!formula) continue;
+      if(total === undefined || total === null) continue;
       if(!tok.combatant) await tok.toggleCombat();
-      await tok.actor.rollInitiative({initiativeOptions: {formula}});
+      await tok.combatant.update({initiative: total});
     }
   }
 }
