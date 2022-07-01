@@ -6,7 +6,7 @@ const tableName = "name of the new table goes here";
 const tableDescription = "description of table goes here";
 
 /* --------------------- */
-const compendium = game.packs.get(key);
+const compendium = game.packs.get(collection);
 if(!compendium) return ui.notifications.warn("Your key is invalid.");
 const compendiumIndex = await compendium.getIndex({fields: ["img"]});
 
