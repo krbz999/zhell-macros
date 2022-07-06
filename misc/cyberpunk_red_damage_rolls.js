@@ -1,7 +1,9 @@
 // two dice roll macros for Cyberpunk RED.
 
 
-//
+/* Roll a d10 + a modifier. If you roll a 10,
+   add another d10 on top. If you rolled a d10,
+   subtract another d10 instead. */
 new Dialog({
 	title: "your title here",
 	content: `
@@ -40,7 +42,11 @@ new Dialog({
 }).render(true);
 
 
-
+/* Roll a variable number of d6s. If more than one die, post them
+   in chat, announcing a critical hit if at least two dice rolled
+   a 6. If instead only one d6, either post it in chat if it did
+   not roll a 6, else roll another d6, and if both are sixes,
+   announce a critical hit, else just post the first die. */
 new Dialog({
 	title: "your title here",
 	content: `
