@@ -12,19 +12,40 @@ const selectedPlayerIds = canvas.tokens.controlled.map(i => i.actor.id).filter(i
 // Build checkbox list for all active players
 const options = users.reduce((acc, {id, name, character}) => {
   // should be checked by default.
-  const checked = !!character && selectedPlayerIds.includes(character.id) && "checked";
+  const checked = (!!character && selectedPlayerIds.includes(character.id)) ? "selected" : "";
   
-  return acc + `
-    <input type="checkbox" id="${id}" value="${name}" ${checked}>
-    <label for="${id}">${name}</label>`;
-}, `<form><div class="form-group"><div class="form-fields">`) + `</div></div></form>`;
+  return acc + `<span class="whisper-dialog-player-name ${checked}" id="${id}">${name}</span>`;
+}, `<form><div class="form-fields">`) + `</div></form>`;
+
+
+const style = `
+<style>
+
+.form-fields {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+}
+
+.whisper-dialog-player-name.selected {
+  background: green;
+}
+
+.whisper-dialog-player-name {
+  padding: 1px 4px;
+  border: 1px solid var(--color-border-dark-tertiary);
+  border-radius: 2px;
+  white-space: nowrap;
+  word-break: break-all;
+}
+
+</style>`;
 
 new Dialog({
   title: "Whisper",
-  content: `
+  content: style + `
     <p>Whisper to:</p>${options} <hr>
     <label for="message">Message:</label>
-    <textarea id="message" name="message" rows="4" cols="50"></textarea>
+    <textarea style="resize: none;" id="message" name="message" rows="6" cols="50"></textarea>
     <hr>`,
   buttons: {go: {
     icon: `<i class="fas fa-check"></i>`,
@@ -32,7 +53,7 @@ new Dialog({
     callback: async (html) => {
       const whisperIds = new Set();
       for(let {id} of users){
-        if(html[0].querySelector(`input[id=${id}]`).checked){
+        if(!!html[0].querySelector(`span[id="${id}"].selected`)){
           whisperIds.add(id);
         }
       }
@@ -41,5 +62,13 @@ new Dialog({
       const whisper = Array.from(whisperIds);
       await ChatMessage.create({content, whisper});
     }
-  }}
+  }},
+  render: (html) => {
+    html.css("height", "auto");
+    for(let playerName of html[0].querySelectorAll(".whisper-dialog-player-name")){
+    playerName.addEventListener("click", () => {
+      playerName.classList.toggle("selected");
+    });
+  }
+  }
 }).render(true);
