@@ -1,17 +1,17 @@
 // Divine Smite
-// required modules: itemacro
+// required modules: none.
 
 const rollData = foundry.utils.duplicate(actor.getRollData());
 const inputs = Object.entries(rollData.spells).filter(s => {
 	return s[1].value > 0;
 }).map(([key, {value, max}]) => {
-	let cardinal = key === "pact" ? "Pact Slot" : nth(Number(key.at(-1)));
-	return [key, cardinal, value, max];
+	let crd = key === "pact" ? "Pact Slot" : nth(Number(key.at(-1)));
+	return [key, crd, value, max];
 });
 if(inputs.length < 1) return ui.notifications.warn("You have no spell slots remaining.");
 
-const options = inputs.reduce((acc, [key, cardinal, value, max]) => {
-	return acc + `<option value="${key}"><tt>${cardinal} (${value}/${max})</tt></option>`;
+const options = inputs.reduce((acc, [key, crd, value, max]) => {
+	return acc + `<option value="${key}">${crd} (${value}/${max})</option>`;
 }, ``);
 const content = `
 <form>
