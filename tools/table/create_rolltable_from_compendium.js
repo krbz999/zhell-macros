@@ -10,20 +10,21 @@ const compendium = game.packs.get(collection);
 if(!compendium) return ui.notifications.warn("Your key is invalid.");
 const compendiumIndex = await compendium.getIndex({fields: ["img"]});
 
-const results = [...compendiumIndex].map(({name, img}, i) => ({
-	text: name,
-	type: CONST.TABLE_RESULT_TYPES.COMPENDIUM,
-	collection,
-	img,
-	weight: 1,
-	range: [i+1, i+1],
-	drawn: false
+const results = [...compendiumIndex].map(({name, img, _id}, i) => ({
+  text: name,
+  type: CONST.TABLE_RESULT_TYPES.COMPENDIUM,
+  collection,
+  img,
+  resultId: _id,
+  weight: 1,
+  range: [i+1, i+1],
+  drawn: false
 }));
 
 await RollTable.create({
-	name: tableName,
-	results,
-	img: tableImg,
-	description: tableDescription,
-	formula: `1d${results.length}`
+  name: tableName,
+  results,
+  img: tableImg,
+  description: tableDescription,
+  formula: `1d${results.length}`
 });
