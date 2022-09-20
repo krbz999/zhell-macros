@@ -24,6 +24,6 @@ const options = {
 
 const use = await item.use();
 if ( !use ) return;
-for ( const target of game.user.targets) {
+for ( const target of game.user.targets ) {
     await warpgate.mutate(target.document, updates, {}, options);
 }
