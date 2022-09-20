@@ -1,15 +1,17 @@
-// channel divinity: warming respite (oath of the hearth)
-// required modules: itemacro, warpgate.
+// WARMING RESPITE (oath of the hearth)
+// required modules: itemacro, warpgate
 
-const roll = await item.roll();
-if(!roll) return;
+const use = await item.use();
+if ( !use ) return;
 
-const {levels} = actor.getRollData().classes.paladin;
-
-for(let target of game.user.targets){
-	const temp = actor.getRollData().attributes.hp.temp ?? 0;
-	if(levels <= temp) continue;
-	const updates = {actor: {"data.attributes.hp.temp": levels}};
-	const options = {permanent: true, description: `${actor.name} is granting you ${levels} temporary hit points.`};
-	await warpgate.mutate(target.document, updates, {}, options);
+const { levels } = actor.getRollData().classes.paladin;
+const updates = { actor: { "system.attributes.hp.temp": levels } }
+const options = {
+    permanent: true,
+    description: `${actor.name} is granting you ${levels} temporary hit points.`
 }
+Array.from(game.user.targets).filter(target => {
+    return target.actor.system.attributes.hp.temp < levels;
+}).map(target => {
+    return warpgate.mutate(target.document, updates, {}, options);
+});
