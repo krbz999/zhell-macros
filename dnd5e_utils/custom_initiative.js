@@ -1,38 +1,57 @@
-// request initiative rolls from players. also works for selected tokens for the GM.
-// you may input any function in the action (default is a dex check).
-// combat is created if none exist, and tokens are toggled for combat if not already.
+// Combat Macro, requesting initiative.
+// This creates a combat if it does not exist.
+// It then requests Dexterity checks from all players.
+// GM can use it to roll for all selected tokens.
+// Tokens that have initiative values are skipped.
+// Combat is toggled on for each token if they are not already.
+// Item Piles will be ignored.
 // required modules: requestor.
 
+
 const action = async () => {
-  if(!game.user.isGM){
-    const tok = token ?? game.user.character?.getActiveTokens()[0];
-    if(!tok) return ui.notifications.warn("Need a token.");
-    if(tok.combatant && tok.combatant.initiative !== null) return;
-    const {total} = await tok.actor.rollAbilityTest("dex", {
-      chatMessage: true, event, parts: [tok.actor.data.data.attributes.init.value], flavor: `${tok.name} rolls for initiative!`
+    const selected = canvas.tokens.controlled;
+    const charTokens = game.user.character?.getActiveTokens() ?? [];
+    const itemPilesActive = !!game.modules.get("item-piles")?.active;
+    let toks = selected.length > 0 ? selected : charTokens;
+
+    toks = toks.filter(i => {
+        if ( i.combatant && i.combatant.initiative !== null ) return false;
+        if ( !itemPilesActive ) return true;
+        if ( i.actor.getFlag("item-piles", "data.active") ) return false;
+        return true;
     });
-    if(total === undefined || total === null) return;
-    if(!tok.combatant) await tok.toggleCombat();
-    await tok.combatant.update({initiative: total});
-  }else{
-    const toks = canvas.tokens.controlled;
-    if(toks.length < 1) return ui.notifications.warn("Need a token.");
-    for(tok of toks){
-      if(tok.combatant && tok.combatant.initiative !== null) continue;
-      const {total} = await tok.actor.rollAbilityTest("dex", {
-        chatMessage: false, event, parts: [tok.actor.data.data.attributes.init.value]
-      });
-      if(total === undefined || total === null) continue;
-      if(!tok.combatant) await tok.toggleCombat();
-      await tok.combatant.update({initiative: total});
+    if( !toks.length ){
+        return ui.notifications.warn("No valid tokens.");
     }
-  }
+    const updates = [];
+    for ( let tok of toks ) {
+        const parts = [];
+        const init_only = tok.actor.getFlag("world", "initiative-bonus");
+        if( !!init_only ) parts.push(init_only);
+        parts.push(tok.actor.system.attributes.init.value);
+        const rollOptions = {
+            chatMessage: !game.user.isGM,
+            event,
+            parts,
+            advantage: !!tok.actor.getFlag("dnd5e", "initiativeAdv"),
+            disadvantage: !!tok.actor.getFlag("dnd5e", "initiativeDisadv")
+        }
+        const {total} = await tok.actor.rollAbilityTest("dex", rollOptions);
+        if ( total !== undefined && total !== null ) {
+            if ( !tok.inCombat ) await tok.toggleCombat();
+            updates.push({ _id: tok.combatant.id, initiative: total });
+        }
+    }
+    return game.combats.get(this.combatId).updateEmbeddedDocuments("Combatant", updates);
 }
-const description = `<p style="text-align:center">Roll initiative!</p>`;
-const img = "icons/skills/melee/weapons-crossed-swords-yellow.webp";
-const label = "Roll!";
-const title = "Initiative";
-const limit = Requestor.CONST.LIMIT.FREE;
-const context = {popout: true, autoClose: true};
-const combat = game.combat ?? await Combat.create({scene: canvas.scene.id, active: true});
-await Requestor.request({buttonData: [{action, label}], img, description, title, limit, context});
+
+const combat = game.combat ?? await Combat.create({ scene: canvas.scene.id, active: true });
+await Requestor.request({
+    buttonData: [{ action, label: "Roll Initiative!", combatId: combat.id }],
+    img: "icons/skills/melee/weapons-crossed-swords-yellow.webp",
+    description: "Roll initiative for all selected tokens or your assigned character.",
+    title: "Roll Initiative",
+    limit: Requestor.LIMIT.FREE,
+    context: { popout: true, autoClose: true },
+    speaker: ChatMessage.getSpeaker({alias: "Initiative"})
+});
