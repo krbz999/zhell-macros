@@ -121,6 +121,8 @@ async function points_to_slot(){
       buttons: points_to_slot_buttons,
       content: style + `<p>Pick a spell slot level to regain from sorcery points (<strong>${spvalue}/${spmax}</strong>).</p>`,
       close: () => {resolve(0)}
+    }, {
+      classes: ["dialog", "font-of-magic"]
     }).render(true);
   });
   
