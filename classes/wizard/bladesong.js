@@ -1,11 +1,11 @@
 /* Bladesong
-- click while no effect active: +INT to AC, +10 to MOV, ADV on ACR, +INT to concentration saves.
+- click while no effect active: +INT to AC, +10 to MOV, +INT to concentration saves.
 - click while effect active: remove effect
 - if wizard 14 or higher: +INT to mwak damage.
 */
 
 // required modules: itemacro
-// added benefit with concentrationnotifier and convenientDescription.
+// added benefit with concentrationnotifier and visual-active-effects.
 
 const effect = actor.effects.find(e => e.getFlag("world", "bladesong") === actor.id);
 if ( effect ) return effect.delete();
