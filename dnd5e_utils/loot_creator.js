@@ -55,24 +55,24 @@ new Dialog({content, title: "Create Loot", buttons: {go: {
   label: "Create Loot!",
   callback: async (html) => {
     // construct item data.
-    const name = html[0].querySelector("input[id=name]").value;
-    const value = html[0].querySelector("textarea[id=description]").value;
-    const price = Number(html[0].querySelector("input[id=price]").value);
-    const quantity = Number(html[0].querySelector("input[id=quantity]").value);
-    const weight = Number(html[0].querySelector("input[id=weight]").value);
+    const name = html[0].querySelector("#name").value;
+    const value = html[0].querySelector("#description").value;
+    const price = Number(html[0].querySelector("#price").value);
+    const quantity = Number(html[0].querySelector("#quantity").value);
+    const weight = Number(html[0].querySelector("#weight").value);
     
-    const itemData = {name, img, type: "loot", data: {description: {value}, price, quantity, rarity: "common", weight}}
+    const itemData = {name, img, type: "loot", system: {description: {value}, price, quantity, rarity: "common", weight}}
     
     // pick the target or location.
     const crosshairs = await warpgate.crosshairs.show({label: "Select recipient or location", drawIcon: false, size: 1});
     const tokenDocs = !crosshairs.cancelled ? warpgate.crosshairs.collect(crosshairs) : [];
     
     // pop it in the sidebar
-    const sidebar = html[0].querySelector("input[id=sidebarbox]").checked;
-    if(sidebar) await Item.createDocuments([itemData]);
+    const sidebar = html[0].querySelector("#sidebarbox").checked;
+    if (sidebar) await Item.createDocuments([itemData]);
     
     // if no token was targeted, add the item to a new item pile, initially hidden.
-    if(tokenDocs.length < 1){
+    if (!tokenDocs.length) {
       const updates = {embedded: {Item: {[name]: itemData}}, token: {hidden: true}}
       return warpgate.spawnAt(crosshairs, "Default Item Pile", updates);
     }
