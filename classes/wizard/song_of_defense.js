@@ -27,7 +27,7 @@ const buttons = availableSlots.reduce((acc, [key]) => {
   acc[key] = { label, callback };
   return acc;
 }, {});
-new Dialog({ title: "Song of Defense", buttons }).render(true);
+new Dialog({ title: "Song of Defense", buttons }, { classes: ["song-of-defense", "dialog"] }).render(true);
 
 // spend spell slot to reduce by 5 * level
 async function spendSlot(key, level) {
