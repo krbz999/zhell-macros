@@ -1,12 +1,12 @@
 /**
   Click to set temporary hit points of selected tokens.
   Shift-click to remove temporary hit points of selected tokens.
-  Actor temp hp will use whichever is highest.
 **/
 
-if(event.shiftKey){
-  for(let tok of canvas.tokens.controlled) await tok.actor.update({"data.attributes.hp.temp" : null});
-  return;
+if (event.shiftKey) {
+  return canvas.tokens.controlled.map(token => {
+    return token.actor?.update({ "system.attributes.hp.temp": null });
+  });
 }
 
 new Dialog({
@@ -20,16 +20,16 @@ new Dialog({
       </div>
     </div>
   </form>`,
-  buttons: {go: {
-    icon: `<i class="fas fa-check"></i>`,
-    label: "Apply",
-    callback: async (html) => {
-      const {value} = html[0].querySelector("input[id=temphp]");
-      for(let tok of canvas.tokens.controlled){
-        let {temp} = tok.actor.getRollData().attributes.hp;
-        await tok.actor.update({"data.attributes.hp.temp" : Math.max(temp, value)});
+  buttons: {
+    go: {
+      icon: "<i class='fa-solid fa-check'></i>",
+      label: "Apply",
+      callback: async (html) => {
+        const { value } = html[0].querySelector("#temphp");
+        return canvas.tokens.controlled.map(token => {
+          return token.actor?.applyTempHP(value);
+        });
       }
     }
-  }},
-  default: "go"
+  }
 }).render(true);
