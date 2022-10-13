@@ -1,53 +1,50 @@
 // dialog to adjust resources.
-
-
-const actor = token?.actor ?? game.user.character;
 if(!actor) return ui.notifications.warn("You need an actor.");
 
-const resources = duplicate(actor.data.data.resources);
+const resources = foundry.utils.duplicate(actor.system.resources);
 const content = `
-  <form>
-    <div class="form-group">
-      <label for="first">${resources.primary.label}</label>
-      <div class="form-fields">
-        <input type="number" id="firstvalue" value="${resources.primary.value}"></input>
-        <span class="sep"> / </span>
-        <input type="number" id="firstmax" value="${resources.primary.max}"></input>
-      </div>
+<form>
+  <div class="form-group">
+    <label>${resources.primary.label}</label>
+    <div class="form-fields">
+      <input type="number" id="primary-v" value="${resources.primary.value}">
+      <span class="sep"> / </span>
+      <input type="number" id="primary-m" value="${resources.primary.max}">
     </div>
-    <div class="form-group">
-      <label for="second">${resources.secondary.label}</label>
-      <div class="form-fields">
-        <input type="number" id="secondvalue" value="${resources.secondary.value}"></input>
-        <span class="sep"> / </span>
-        <input type="number" id="secondmax" value="${resources.secondary.max}"></input>
-      </div>
+  </div>
+  <div class="form-group">
+    <label>${resources.secondary.label}</label>
+    <div class="form-fields">
+      <input type="number" id="secondary-v" value="${resources.secondary.value}">
+      <span class="sep"> / </span>
+      <input type="number" id="secondary-m" value="${resources.secondary.max}">
     </div>
-    <div class="form-group">
-      <label for="third">${resources.tertiary.label}</label>
-      <div class="form-fields">
-        <input type="number" id="thirdvalue" value="${resources.tertiary.value}"></input>
-        <span class="sep"> / </span>
-        <input type="number" id="thirdmax" value="${resources.tertiary.max}"></input>
-      </div>
+  </div>
+  <div class="form-group">
+    <label>${resources.tertiary.label}</label>
+    <div class="form-fields">
+      <input type="number" id="tertiary-v" value="${resources.tertiary.value}">
+      <span class="sep"> / </span>
+      <input type="number" id="tertiary-m" value="${resources.tertiary.max}">
     </div>
-  </form>
-  <hr>`;
+  </div>
+</form>`;
 new Dialog({
   title: "Adjust Resources",
   content,
-  buttons: {go: {
-    icon: `<i class="fas fa-check"></i>`,
-    label: "All Good",
-    callback: async (html) => {
-      resources.primary.value = Number(html[0].querySelector("input[id=firstvalue]").value);
-      resources.primary.max = Number(html[0].querySelector("input[id=firstmax]").value);
-      resources.secondary.value = Number(html[0].querySelector("input[id=secondvalue]").value);
-      resources.secondary.max = Number(html[0].querySelector("input[id=secondmax]").value);
-      resources.tertiary.value = Number(html[0].querySelector("input[id=thirdvalue]").value);
-      resources.tertiary.max = Number(html[0].querySelector("input[id=thirdmax]").value);
-      await actor.update({"data.resources": resources});
+  buttons: {
+    go: {
+      icon: "<i class='fa-solid fa-check'></i>",
+      label: "All Good",
+      callback: async (html) => {
+        resources.primary.value = Number(html[0].querySelector("#primary-v").value);
+        resources.primary.max = Number(html[0].querySelector("#primary-m").value);
+        resources.secondary.value = Number(html[0].querySelector("#secondary-v").value);
+        resources.secondary.max = Number(html[0].querySelector("#secondary-m").value);
+        resources.tertiary.value = Number(html[0].querySelector("#tertiary-v").value);
+        resources.tertiary.max = Number(html[0].querySelector("#tertiary-m").value);
+        return actor.update({ "system.resources": resources });
+      }
     }
-  }},
-  default: "go"
+  }
 }).render(true);
