@@ -1,13 +1,12 @@
 // Toll the Dead
 // required modules: itemacro.
-// setup: have a target.
 
 const target = game.user.targets.first();
-if(!target) return ui.notifications.warn("Please target a token.");
+if (!target) return ui.notifications.warn("Please target a token.");
 
 // get consts.
-const {level} = actor.getRollData().details;
-const {value, max} = target.actor.getRollData().attributes.hp;
+const { level } = actor.system.details;
+const { value, max } = target.actor.system.attributes.hp;
 
 // calculate formula.
 const dice = level >= 17 ? 4 : level >= 11 ? 3 : level >= 5 ? 2 : 1;
@@ -17,9 +16,9 @@ const size = value < max ? "d12" : "d8";
 const flavor = value < max ? "Toll the Dead - Damage Roll (hurt)" : "Toll the Dead - Damage Roll (full)";
 
 // roll it.
-const roll = await item.roll();
-if(!roll) return;
+const use = await item.use();
+if (!use) return;
 await new Roll(`${dice}${size}[necrotic]`).toMessage({
-	flavor,
-	speaker: ChatMessage.getSpeaker({actor})
+  flavor,
+  speaker: ChatMessage.getSpeaker({ actor })
 });
