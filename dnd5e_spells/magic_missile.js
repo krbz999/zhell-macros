@@ -1,11 +1,12 @@
-// Magic Missile
-// required modules: itemmacro
+// MAGIC MISSILE
+// required modules: itemacro
 
-const roll = await item.roll();
-if(!roll) return;
+const use = await item.use();
+if (!use) return;
 
-const content = roll.data.content;
-const level = Number(content.charAt(content.indexOf("data-spell-level") + 18));
+const div = document.createElement("DIV");
+div.innerHTML = use.content;
+const level = Number(div.firstChild.dataset.spellLevel);
 
 const dialog = new Dialog({
   title: "Direct your missiles",
@@ -15,31 +16,33 @@ const dialog = new Dialog({
     <div class="form-group">
       <label for="csv">CSV (${level + 2} missiles):</label>
       <div class="form-fields">
-        <input type="text" id="csv" value="${level + 2}"></input>
+        <input type="text" id="csv" value="${level + 2}">
       </div>
     </div>
-  </form>
-  <hr>`,
-  buttons: {fire: {
-    icon: `<i class='fas fa-check'></i>`,
-    label: "Shoot!",
-    callback: async (html) => {
-      const csv = html[0].querySelector("input[id=csv]").value;
-      const values = csv.split(",");
-      
-      // check if the sum is correct.
-      const sum = values.reduce((acc, e) => acc += Number(e), 0);
-      if(sum !== level + 2) return dialog.render();
-      
-      // create the rolls.
-      for(let value of values){
-        await new Roll(`${value}d4 + ${value}`).toMessage({
+  </form>`,
+  buttons: {
+    fire: {
+      icon: "<i class='fa-solid fa-check'></i>",
+      label: "Shoot!",
+      callback: async (html) => {
+        const csv = html[0].querySelector("#csv").value;
+        const values = csv.split(",");
+        
+        // check if the sum is correct.
+        const sum = values.reduce((acc, e) => acc += Number(e), 0);
+        if (sum !== level + 2) return dialog.render();
+        // create the rolls.
+        const rolls = await Promise.all(values.map(v => {
+          return new Roll(`${v}d4 + ${v}`).evaluate({ async: true });
+        }));
+        return ChatMessage.create({
           flavor: "Magic Missile - Damage Roll (Force)",
-          speaker: ChatMessage.getSpeaker({actor})
+          speaker: ChatMessage.getSpeaker({actor}),
+          type: CONST.CHAT_MESSAGE_TYPES.ROLL,
+          rolls
         });
       }
     }
-  }},
-  default: "fire"
+  }
 });
 dialog.render(true);
