@@ -11,10 +11,9 @@ const sizes = [1, 2];
 
 // the update object.
 const updates = {}
-if(swapSize) updates.img = token.document.data.img === imgs[0] ? imgs[1] : imgs[0];
-if(swapImg) updates = mergeObject(updates, {
-  height: token.document.data.height === sizes[0] ? sizes[1] : sizes[0],
-  width: token.document.data.height === sizes[0] ? sizes[1] : sizes[0]
+if (swapImg) updates["texture.src"] = token.document.texture.src === imgs[0] ? imgs[1] : imgs[0];
+if (swapSize) updates = foundry.utils.mergeObject(updates, {
+  height: token.document.height === sizes[0] ? sizes[1] : sizes[0],
+  width: token.document.height === sizes[0] ? sizes[1] : sizes[0]
 });
-
 await token.document.update(updates);
