@@ -1,7 +1,7 @@
 // execute macro to cycle selected wall directions (both, left, right).
 // hold shift to instead cycle between movement types (none, normal).
 
-if (!event.shiftKey ){
+if (!event.shiftKey) {
   const { BOTH, LEFT, RIGHT } = CONST.WALL_DIRECTIONS;
   const updates = canvas.walls.controlled.map(wall => {
     let dir = BOTH;
