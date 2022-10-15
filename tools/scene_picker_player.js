@@ -1,9 +1,8 @@
 // pop a dialog to pick a scene to view.
+// choosing from all scenes set to 'All Players'
 const options = game.scenes.filter(scene => {
-  const { navigation, ownership } = scene;
-  if (scene.active) return true;
-  if (!navigation || ownership.default !== 2) return false;
-  return true;
+  const { active, ownership } = scene;
+  return active || ownership.default === 2;
 }).reduce((acc, { id, name }) => {
   return acc + `<option value="${id}">${name}</option>`;
 }, "");
