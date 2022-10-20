@@ -6,7 +6,7 @@
 
 const options = canvas.scene.notes.reduce((acc, e) => {
   return acc + `<option value="${e.id}">${e.text}</option>`;
-});
+}, "");
 const content = `
 <form>
   <div class="form-group">
