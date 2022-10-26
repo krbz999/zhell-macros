@@ -132,7 +132,7 @@ async function pointsToSlot() {
     }).render(true);
   });
 
-  if ( retKey !== 0) {
+  if (retKey !== 0) {
     spells[retKey].value++;
     await actor.update({ system: { spells } });
     const level = retKey === "pact" ? spells["pact"].level : retKey.at(-1);
