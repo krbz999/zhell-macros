@@ -1,32 +1,31 @@
-// Flaming Sphere
-// modules required: itemacro, warpgate.
-// setup: have a sidebar actor named "Flaming Sphere" with a feature set up correctly, with the same name.
+// FLAMING SPHERE
+// Spawns a flaming sphere, and allows each subsequent use while concentrating
+// on the spell to redisplay the card at the correct level. Uses Effect Macro
+// to dismiss the sphere when concentration ends.
+// Required modules: itemacro, warpgate, concentrationnotifier, effectmacro.
 
-// check if spawn already exists, and if it does, roll the item.
-const spawn = canvas.scene.tokens.find(i => i.actor.getFlag("world", "flaming-sphere") === actor.id);
-if(!!spawn) return spawn.actor.items.getName("Flaming Sphere").roll();
+// if concentrating on this spell, redisplay it.
+const isConc = CN.isActorConcentratingOnItem(actor, item);
+if (isConc) return CN.redisplayCard(actor);
 
-// if spawn does not exist, cast the spell:
-const level = await warpgate.dnd5e.rollItem(item);
-if(!level) return;
+// if not concentrating on this spell, cast and summon.
+const use = await item.use();
+if (!use) return;
 
-// set up options and updates to token and actor:
-const {HOVER, NONE} = CONST.TOKEN_DISPLAY_MODES;
-const dc = actor.data.data.attributes.spelldc;
+// then set up updates to token and actor:
+const updates = { token: {
+  name: `${actor.name.split(" ")[0]}'s Sphere`,
+  displayName: CONST.TOKEN_DISPLAY_MODES.HOVER,
+  displayBars: CONST.TOKEN_DISPLAY_MODES.NONE,
+  light: { dim: 40, bright: 20 }
+} }
+const options = { crosshairs: {
+  drawIcon: false, icon: "icons/svg/dice-target.svg"
+} }
 
-const updates = {
-	token: {
-		name: `${game.user.charname}'s FLaming Sphere`,
-		displayName: HOVER, displayBars: NONE
-	},
-	actor: {"flags.world.flaming-sphere": actor.id},
-	embedded: {Item: {"Flaming Sphere": {
-		img: "icons/magic/fire/explosion-fireball-large-orange.webp",
-		data: {
-			"damage.parts": [[`${level}d6`, "fire"]],
-			save: {ability: "dex", dc, scaling: "flat"}}
-	}}}
-}
-
-// spawn the actor:
-await warpgate.spawn("Flaming Sphere", updates);
+// then spawn the actor:
+await actor.sheet.minimize();
+const [spawn] = await warpgate.spawn("Flaming Sphere", updates, {}, options);
+await actor.sheet.maximize();
+const effect = CN.isActorConcentratingOnItem(actor, item);
+return effect?.setFlag("effectmacro", "onDelete.script", `await warpgate.dismiss("${spawn}");`);
