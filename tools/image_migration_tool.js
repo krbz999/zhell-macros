@@ -28,7 +28,6 @@ const embedded = [
   ["journal", "pages", "src"]
 ];
 
-// touch nothing below this comment.
 let errors = 0;
 ui.notifications.info("MIGRATION BEGUN!");
 for (const m of maps) await swap(...m);
@@ -37,15 +36,12 @@ ui.notifications.info(`MIGRATION COMPLETED! (errors: ${errors})`);
 
 async function swap(collection, property) {
   const coll = collection.metadata.collection;
-  const docs = game[coll];
   console.warn(`Replacing ${property} in game.${coll}.`);
   try {
-    const updates = createMap(docs, property);
+    const updates = createMap(game[coll], property);
     return collection.updateDocuments(updates);
   } catch {
-    console.error(`Error in game.${coll}.`);
-    errors++;
-    return null;
+    return error(`Error in game.${coll}.`);
   }
 }
 
@@ -58,9 +54,7 @@ async function swapEmbedded(collection, embeddedCollection, property) {
       const type = doc[embeddedCollection].find(c => c).documentName;
       await doc.updateEmbeddedDocuments(type, docs);
     } catch {
-      console.error(`Error replacing ${property} in game.${collection} (${doc.name}).`);
-      errors++;
-      return null;
+      error(`Error replacing ${property} in game.${collection} (${doc.name}).`);
     }
   }
 }
@@ -71,4 +65,10 @@ function createMap(docs, property) {
     if (!prop) return { _id: doc.id };
     return { _id: doc.id, [property]: prop.replace(toReplace, replacement) };
   })
+}
+
+function error(string){
+  console.error(string);
+  errors++;
+  return null;
 }
