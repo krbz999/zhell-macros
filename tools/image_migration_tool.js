@@ -28,6 +28,7 @@ const embedded = [
   ["journal", "pages", "src"]
 ];
 
+// touch nothing below this line.
 let errors = 0;
 ui.notifications.info("MIGRATION BEGUN!");
 for (const m of maps) await swap(...m);
