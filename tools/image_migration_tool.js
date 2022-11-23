@@ -41,8 +41,8 @@ async function swap(collection, property) {
   try {
     const updates = createMap(game[coll], property);
     return collection.updateDocuments(updates);
-  } catch {
-    return error(`Error in game.${coll}.`);
+  } catch (err) {
+    return error(`Error in game.${coll}.`, err);
   }
 }
 
@@ -54,8 +54,8 @@ async function swapEmbedded(collection, embeddedCollection, property) {
       if (!docs.length) continue;
       const type = doc[embeddedCollection].find(c => c).documentName;
       await doc.updateEmbeddedDocuments(type, docs);
-    } catch {
-      error(`Error replacing ${property} in game.${collection} (${doc.name}).`);
+    } catch (err) {
+      error(`Error replacing ${property} in game.${collection} (${doc.name}).`, err);
     }
   }
 }
@@ -68,8 +68,9 @@ function createMap(docs, property) {
   })
 }
 
-function error(string){
+function error(string, err){
   console.error(string);
+  console.warn(err);
   errors++;
   return null;
 }
