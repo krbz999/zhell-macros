@@ -1,10 +1,5 @@
-/* Bladesong
-- click while no effect active: +INT to AC, +10 to MOV, +INT to concentration saves.
-- click while effect active: remove effect
-- if wizard 14 or higher: +INT to mwak damage.
-*/
-
-// required modules: itemacro
+// BLADESONG
+// required modules: itemacro.
 // added benefit with concentrationnotifier and visual-active-effects.
 
 const effect = actor.effects.find(e => e.getFlag("world", "bladesong") === actor.id);
@@ -20,20 +15,23 @@ const changes = [
   { key: "system.attributes.movement.walk", mode: ADD, value: 10 },
   { key: "flags.dnd5e.concentrationBonus", mode: ADD, value: `+${mod}` }
 ];
-if ( levels >= 14 ) changes.push({ key: "system.bonuses.mwak.damage", mode: ADD, value: `+${mod}` });
+let mwakBonus = "";
+if ( levels >= 14 ) {
+  changes.push({ key: "system.bonuses.mwak.damage", mode: ADD, value: `+${mod}` });
+  mwakBonus = ` you add +${mod} to melee weapon damage,`;
+}
 
 const use = await item.use();
 if ( !use ) return;
-await actor.createEmbeddedDocuments("ActiveEffect", [{
+
+return actor.createEmbeddedDocuments("ActiveEffect", [{
   changes,
   icon: item.img,
   label: item.name,
   duration: { seconds: 60 },
   "flags.world.bladesong": actor.id,
-  "flags.visual-active-effects.data": `
-    You have +${mod} to AC,
-    +10ft movement speed,
-    advantage on Acrobatics,
-    ${levels >= 14 ? "+" + mod + " to melee weapon damage," : ""}
-    and +${mod} to saving throws for concentration.`,
+  "flags.visual-active-effects.data": {
+    intro: "<p>You are under the effects of Bladesong.</p>",
+    content: `<p>You have +${mod} to your AC, +10ft of movement speed, advantage on Acrobatics checks,${mwakBonus} and you have a +${mod} bonus to saving throws to maintain concentration.</p>`
+  }
 }]);
