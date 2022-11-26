@@ -12,8 +12,8 @@ const style = `
 const spells = foundry.utils.duplicate(actor.system.spells);
 
 // levels with unspent spell slots.
-const availableSlots = Object.entries(spells).filter(([key, { value, max }]) => {
-  return (value > 0 && max > 0);
+const availableSlots = Object.entries(spells).filter(([key, level]) => {
+  return (level.value > 0 && level.max > 0);
 });
 if (!availableSlots.length) {
   ui.notifications.warn("You have no spell slots remaining.");
@@ -27,14 +27,18 @@ const buttons = availableSlots.reduce((acc, [key]) => {
   acc[key] = { label, callback };
   return acc;
 }, {});
-new Dialog({ title: "Song of Defense", buttons, content: style }, { classes: ["song-of-defense", "dialog"] }).render(true);
+new Dialog({
+  title: "Song of Defense", buttons, content: style
+}, {
+  classes: ["song-of-defense", "dialog"]
+}).render(true);
 
 // spend spell slot to reduce by 5 * level
 async function spendSlot(key, level) {
   spells[key].value--;
-  await actor.update({ system: { spells } });
+  await actor.update({"system.spells": spells});
   return ChatMessage.create({
     content: `${actor.name} reduced the incoming damage by up to ${Number(level) * 5}.`,
-    speaker: ChatMessage.getSpeaker({ actor })
+    speaker: ChatMessage.getSpeaker({actor})
   });
 }
