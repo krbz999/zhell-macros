@@ -24,22 +24,18 @@ const content = `
     </div>
   </div>
 </form>`;
-new Dialog({
+return Dialog.prompt({
   title: "Scroll to Spell",
   content,
-  buttons: {
-    go: {
-      icon: "<i class='fa-solid fa-check'></i>",
-      label: "Create Spell",
-      callback: async (html) => {
-        const scrollId = html[0].querySelector("#item-select").value;
-        const scroll = wizard.items.get(scrollId);
-        const pack = game.packs.get(key);
-        const spellId = pack.index.getName(scroll.name.replace("Spell Scroll: ", ""))._id;
-        const spell = pack.getDocument(spellId);
-        const createdSpell = await wizard.createEmbeddedDocuments("Item", [spell.toObject()]);
-        if ( createdSpell.length > 0 ) return scroll.delete();
-      }
-    }
+  rejectClose: false,
+  label: "Create Spell",
+  callback: async (html) => {
+    const scrollId = html[0].querySelector("#item-select").value;
+    const scroll = wizard.items.get(scrollId);
+    const pack = game.packs.get(key);
+    const spellId = pack.index.getName(scroll.name.replace("Spell Scroll: ", ""))._id;
+    const spell = pack.getDocument(spellId);
+    const createdSpell = await wizard.createEmbeddedDocuments("Item", [spell.toObject()]);
+    if ( createdSpell.length > 0 ) return scroll.delete();
   }
-}).render(true);
+});
