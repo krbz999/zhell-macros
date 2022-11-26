@@ -1,43 +1,26 @@
 // Arcane Recovery
 // required modules: itemacro
-/*
-  You have learned to regain some of your magical energy by studying your spellbook.
-  Once per day when you finish a short rest, you can choose expended spell slots to recover.
-  The spell slots can have a combined level that is equal to or less than half your wizard level (rounded up),
-  and none of the slots can be 6th level or higher.
-*/
 
 // get spell object and wizard levels.
-const {
-  spells,
-  classes: {
-    wizard: {
-      levels
-    }
-  }
-} = actor.getRollData();
+const levels = actor.getRollData().classes.wizard.levels;
+const spells = foundry.utils.duplicate(actor.system.spells);
 
 // bail out if you can't use this item again.
 const available = item.system.uses.value > 0;
 if (!available) {
-  const string = "DND5E.AbilityUseUnavailableHint";
-  const locale = game.i18n.localize(string);
-  ui.notifications.warn(locale);
+  ui.notifications.warn("DND5E.AbilityUseUnavailableHint", {localize: true});
   return;
 }
 
 // attained spell levels, then mapping to value and max.
-const level_maps = Array.fromRange(6).filter(i => {
-  return spells[`spell${i + 1}`].max > 0;
-}).map(i => {
-  return spells[`spell${i + 1}`];
-});
+const level_maps = Array.fromRange(6).reduce((acc, i) => {
+  const s = spells[`spell${i+1}`];
+  if(s.max > 0) acc.push(s);
+  return acc;
+}, []);
 
 // bail out if there are no missing valid spell slots.
-const anyMissing = level_maps.filter(({ value, max }) => {
-  return value !== max;
-})
-if (!anyMissing.length) {
+if (!level_maps.some(s => s.value !== s.max)) {
   ui.notifications.warn("You are not missing any valid spell slots.");
   return;
 }
@@ -50,56 +33,51 @@ let spent = 0;
 
 let content = `<p name="header">Recovering spell slots: <strong>${spent}</strong> / ${maxVal}.</p> <hr> <form>`;
 for (let i = 0; i < level_maps.length; i++) {
+  const val = i + 1;
+  const name = `level${val}`;
   content += `
-		<div class="form-group">
-			<label style="text-align:center"><strong>${nth(i + 1)}-level</strong></label>
-			<div class="form-fields">`;
-  for (let j = 0; j < level_maps[i].max; j++) content += `
-		<input
-			type="checkbox"
-			value="${i + 1}"
-			name="level${i + 1}"
-			${j < level_maps[i].value ? 'checked disabled' : ''}
-		></input>`;
-  content += `</div></div>`;
+  <div class="form-group">
+    <label style="text-align:center"><strong>${val.ordinalString()}-level</strong></label>
+    <div class="form-fields">`;
+  for (let j = 0; j < level_maps[i].max; j++) {
+    const cd = j < level_maps[i].value ? "checked disabled" : "";
+    content += `<input type="checkbox" value="${val}" name="${name}" ${cd}></input>`;
+  }
+  content += "</div></div>";
 }
-content += `</form> <hr>`;
+content += "</form> <hr>";
 
 const dialog = new Dialog({
   title: "Arcane Recovery",
   content,
   buttons: {
     go: {
-      icon: `<i class="fas fa-check"></i>`,
+      icon: `<i class="fa-solid fa-hat-wizard"></i>`,
       label: "Recover",
       callback: async (html) => {
         if (spent > maxVal || spent < 1) {
           ui.notifications.warn("Invalid number of slots to recover.");
-          dialog.render(true);
-        } else {
-          for (let i = 0; i < 9; i++) {
-            const val = html[0].querySelectorAll(`input[name=level${i + 1}]:checked`).length;
-            spells[`spell${i + 1}`].value = val;
-          }
-          await actor.update({ system: { spells } });
-          ui.notifications.info("Spell slots recovered!");
+          return dialog.render(true);
         }
+        for (let i = 0; i < 9; i++) {
+          const selector = `input[name=level${i+1}]:checked`;
+          const val = html[0].querySelectorAll(selector).length;
+          spells[`spell${i+1}`].value = val;
+	}
+        await actor.update({"system.spells": spells});
+        ui.notifications.info("Spell slots recovered!");
       }
     }
   },
   render: (html) => {
-    html[0].querySelectorAll("input[type=checkbox]").forEach(input => {
-      input.addEventListener("change", function () {
-        spent = Array.fromRange(9).reduce((acc, i) => {
-          const selector = `input[name=level${i + 1}]:checked:not(:disabled)`;
-          const length = html[0].querySelectorAll(selector).length;
-          return acc + Number(length * (i + 1));
-        }, 0);
-        const hint = `Recovering spell slots: <strong>${spent}</strong> / ${maxVal}.`;
-        html[0].querySelector("p[name=header]").innerHTML = hint;
-      });
+    html[0].addEventListener("change", function () {
+      const selector = "input:checked:not(:disabled)";
+      const inputs = html[0].querySelectorAll(selector);
+      spent = Array.from(inputs).reduce((acc, node) => {
+        return acc + Number(node.value);
+      }, 0);
+      const hint = `Recovering spell slots: <strong>${spent}</strong> / ${maxVal}.`;
+      html[0].querySelector("[name=header]").innerHTML = hint;
     });
   }
 }).render(true);
-
-function nth(n) { return n + (["st", "nd", "rd"][((n + 90) % 100 - 10) % 10 - 1] || "th") }
