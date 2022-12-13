@@ -23,7 +23,7 @@ const content = `
 
 new Dialog({
   content,
-  title: "Healing Light"
+  title: "Healing Light",
   buttons: {
     go: {
       icon: "<i class='fas fa-check'></i>",
