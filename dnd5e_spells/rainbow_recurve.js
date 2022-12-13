@@ -1,105 +1,104 @@
 // RAINBOW RECURVE
-
-/* Required modules:
- * concentrationnotifier
- * itemacro
- * mre-dnd5e
- */
+// required modules: concentrationnotifier, itemacro, rollgroups
 
 // get whether we are concentrating on the spell.
-const CN = ConcentrationNotifier;
-const concentrating = !!CN.concentratingOn(actor, item);
+let effect = CN.isActorConcentratingOnItem(actor, item);
 
-// if not concentrating, cast the spell and choose arrow, otherwise just choose arrow.
-if(!concentrating) await restoreArrows();
+const colors = [
+  "red", "orange", "yellow", "green",
+  "blue", "indigo", "violet"
+];
+
+// if not concentrating, cast the spell.
+if (!effect) {
+  const use = await item.use();
+  if (!use) return;
+  effect = await CN.waitForConcentrationStart(actor, {
+    item, max_wait: 1000
+  });
+  if (!effect) return;
+}
 return chooseArrow();
 
 // dialog to choose arrow.
-async function chooseArrow(){
-	const arrows = Object.entries(item.getFlag("world", "arrow-available"));
-	const available = arrows.filter(([arrow, bool]) => bool);
-	
-	if(available.length < 1){
-		const effect = CN.concentratingOn(actor, item);
-		if(effect) return effect.delete();
-	}
-	
-	const options = available.reduce((acc, [arrow, bool]) => acc += `
-		<option value="${arrow}">${arrow.titleCase()}</option>`, ``);
-	
-	const choice = await new Promise(resolve => {
-		new Dialog({
-			title: "Rainbow Recurve",
-			content: `
-				<form>
-					<div class="form-group">
-						<label for="arrow">Select arrow:</label>
-						<div class="form-fields">
-							<select id="arrow">${options}</select>
-						</div>
-					</div>
-				</form>`,
-			buttons: {go: {
-				icon: `<i class="fas fa-check"></i>`,
-				label: "Shoot!",
-				callback: (html) => {
-					const arrow = html[0].querySelector("select[id=arrow]").value;
-					resolve(arrow);
-				}
-			}},
-			default: "go",
-			close: () => resolve(false)
-		}).render(true);
-	});
-	if(!choice) return;
-	
-	await shootArrow(choice);
+async function chooseArrow() {
+  // get all arros that have NOT been fired.
+  const arrows = effect.getFlag("world", "arrow-fired") ?? {};
+  const available = colors.filter(c => {
+    return !(c in arrows);
+  });
+
+  // no arrows available, end concentration.
+  if (available.length < 1) return effect.delete();
+
+  const options = available.reduce((acc, color) => {
+    return acc + `<option value="${color}">${color.titleCase()}</option>`;
+  }, "");
+
+  new Dialog({
+    title: "Rainbow Recurve",
+    content: `
+    <form>
+      <div class="form-group">
+        <label for="arrow">Select arrow:</label>
+        <div class="form-fields">
+          <select id="arrow">${options}</select>
+        </div>
+      </div>
+    </form>`,
+    buttons: {
+      shoot: {
+        icon: "<i class='fa-solid fa-check'></i>",
+        label: "Shoot!",
+        callback: async (html) => {
+          const arrow = html[0].querySelector("#arrow").value;
+          return shootArrow(arrow);
+        }
+      }
+    }
+  }).render(true);
 }
 
 // create item clone.
-async function shootArrow(choice){
-	const formulaSet = choice === "red" ? [1] : choice === "orange" ? [2] : choice === "yellow" ? [3] : choice === "green" ? [4] : choice === "blue" ? [5] : false;
-	const additionalSave = choice === "indigo" ? "con" : choice === "violet" ? "wis" : false;
-	
-	const mreFlag = [{label: "Damage", formulaSet: [0]}];
-	if(formulaSet) mreFlag.push({label: "On failed save", formulaSet});
-	
-	await item.setFlag("mre-dnd5e", "formulaGroups", mreFlag); 
-	const displayCard = concentrating ? await item.displayCard({createMessage: false}) : await item.roll({createMessage: false});
-	
-	// add new saving throw button.
-	if(additionalSave){
-		const content = displayCard.content;
-		const template = document.createElement("template");
-		template.innerHTML = content;
-		const html = template.content.firstChild;
-		const regularSaveButton = html.querySelector("button[data-action=save]"); // to insert new button after.
-		const {spelldc, spellcasting} = actor.data.data.attributes;
-		
-		let abilityS = additionalSave;
-		let abilityL = CONFIG.DND5E.abilities[abilityS];
-		const newSaveButton = document.createElement("button");
-		newSaveButton.setAttribute("data-action", "save");
-		newSaveButton.setAttribute("data-ability", abilityS);
-		newSaveButton.innerHTML = `Saving Throw DC ${spelldc} ${abilityL}`;
-		regularSaveButton.parentNode.insertBefore(newSaveButton, regularSaveButton.nextSibling);
-		displayCard.content = html.outerHTML;
-	}
-	
-	await ChatMessage.create(displayCard);
-	await item.setFlag("world", `arrow-available.${choice}`, false);
-}
+async function shootArrow(arrow) {
+  // set up rollgroups and damage parts.
+  const groups = [{ label: "Force", parts: [0] }];
+  if (arrow === "red") {
+    groups.push({ label: "Fire", parts: [1] });
+  } else if (arrow === "orange") {
+    groups.push({ label: "Acid", parts: [2] });
+  } else if (arrow === "yellow") {
+    groups.push({ label: "Lightning", parts: [3] });
+  } else if (arrow === "green") {
+    groups.push({ label: "Poison", parts: [4] });
+  } else if (arrow === "blue") {
+    groups.push({ label: "Cold", parts: [5] });
+  }
 
-// reset all arrows to be available.
-async function restoreArrows(){
-	await item.setFlag("world", "arrow-available", {
-		red: true, // formula 1
-		orange: true, // formula 2
-		yellow: true, // formula 3
-		green: true, // formula 4
-		blue: true, // formula 5
-		indigo: true, // no formula
-		violet: true // no formula
-	});
-	await item.setFlag("mre-dnd5e", "formulaGroups", [{label: "Damage", formulaSet: [0]}]);
+  let addSave;
+  if (arrow === "indigo") addSave = "con";
+  else if (arrow === "violet") addSave = "wis";
+
+  await effect.setFlag("concentrationnotifier", "data", {
+    "itemData.flags.rollgroups.config.groups": groups
+  });
+
+  const card = await CN.redisplayCard(actor);
+
+  // add new saving throw button.
+  if (addSave) {
+    const div = document.createElement("DIV");
+    div.innerHTML = card.content;
+    const oldSave = div.querySelector("button[data-action=save]");
+    const dc = actor.system.attributes.spelldc;
+
+    const ability = CONFIG.DND5E.abilities[addSave];
+    const newSaveButton = document.createElement("button");
+    newSaveButton.setAttribute("data-action", "save");
+    newSaveButton.setAttribute("data-ability", addSave);
+    newSaveButton.innerHTML = `Saving Throw DC ${dc} ${ability}`;
+    oldSave.after(newSaveButton);
+    await card.update({ content: div.innerHTML });
+  }
+  await effect.setFlag("world", `arrow-fired.${arrow}`, true);
 }
