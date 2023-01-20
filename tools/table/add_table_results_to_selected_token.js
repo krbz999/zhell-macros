@@ -1,16 +1,21 @@
-// roll on a table that contains items and add the item to a selected token's actor.
+// Draw from a table that contains items and add the items to a selected token's actor.
 
-// get the uuid by right-clicking the book icon in the table's header.
+// Get the uuid by right-clicking the book icon in the table's header.
 const table = await fromUuid("uuid of table goes here");
 
-// draw items from compendium or sidebar.
+// Draw items from compendium or sidebar.
 const receiver = token?.actor;
-if(!table || !receiver) return ui.notifications.warn("Missing table or selected token.");
-const {results} = await table.draw();
-const itemData = (await Promise.all(results.map(i => {
+if(!table || !receiver){
+  ui.notifications.warn("Missing table or selected token.");
+  return null;
+}
+const draw = await table.draw();
+const promises = draw.results.map(i => {
   const key = i.documentCollection;
-  const itemId = i.documentId;
-  const uuid = `Compendium.${key}.${itemId}`;
-  return key === "Item" ? game.items.get(itemId) : fromUuid(uuid);
-}))).map(i => i.toObject());
-await receiver.createEmbeddedDocuments("Item", itemData);
+  const id = i.documentId;
+  const uuid = `Compendium.${key}.${id}`;
+  return key === "Item" ? game.items.get(id) : fromUuid(uuid);
+});
+const items = await Promise.all(promises);
+const itemData = items.map(item => game.items.fromCompendium(item));
+return receiver.createEmbeddedDocuments("Item", itemData);
