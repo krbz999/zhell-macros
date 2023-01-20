@@ -1,9 +1,8 @@
-/*
-  Completely pointless world script for Dual-Wielder feature.
-  Adds a special trait that must be toggled on for the actor.
-  When an actor updates an item, we check if they have
-  exactly 2 weapons equippe, and they are both light weapons.
-*/
+/**
+ * Completely pointless world script for Dual-Wielder feature. Adds a
+ * special trait that must be toggled on for the actor. When an actor
+ * updates an item, we check if they have exactly 2 weapons equipped.
+ */
 
 Hooks.once("ready", () => {
   CONFIG.DND5E.characterFlags.dualWielder = {
@@ -14,43 +13,29 @@ Hooks.once("ready", () => {
   }
 });
 
-const update_feature = async (...args) => {
-  // the args are different for the two hooks but we only need the first and last.
-  const item = args[0];
-  const userId = args[args.length - 1];
+const update_feature = async (item, ...rest) => {
+  // Only do this for one user; the one doing the update.
+  if (game.user.id !== rest.at(-1)) return;
   
-  // only do this for one user; the one doing the update.
-  if (game.user.id !== userId) return;
-  
-  // must be an owned item.
-  const actor = item.actor;
-  if (!actor) return;
-  
-  // actor must have "Dual-Wielder" special trait.
-  const dualWielder = actor.getFlag("dnd5e", "dualWielder");
+  // Must be an owned item and owner must have 'Dual-Wielder' special trait.
+  const dualWielder = item.actor?.getFlag("dnd5e", "dualWielder");
   if (!dualWielder) return;
   
-  // you must have exactly two weapons equipped.
-  const validArsenal = actor.itemTypes.weapon.filter(weapon => {
-    return foundry.utils.getProperty(weapon, "system.equipped");
-  }).length === 2;
+  // Get equipped weapons and Dual Wielder effect.
+  const equipped = item.actor.itemTypes.weapon.filter(weapon => weapon.system.equipped);
+  const effect = item.actor.effects.find(e => e.getFlag("world", "dual-wielder"));
   
-  // get current dualWielder effect.
-  const effect = actor.effects.find(e => {
-    return e.getFlag("world", "dual-wielder");
-  });
+  // If not exactly two weapons equipped, delete the effect if it exists.
+  if (equipped.length !== 2) return effect?.delete();
   
-  // if not exactly two weapons equipped, delete the effect.
-  if (!validArsenal) return effect?.delete();
-  
-  // if already having the effect, do nothing.
+  // If effect already active, do nothing.
   if (effect) return;
   
-  // if exactly two weapons equipped, create the effect.
-  return actor.createEmbeddedDocuments("ActiveEffect", [{
+  // If exactly two weapons equipped, create the effect.
+  return item.actor.createEmbeddedDocuments("ActiveEffect", [{
     icon: "icons/skills/melee/weapons-crossed-swords-white-blue.webp",
     label: "Dual-Wielder",
-    origin: actor.uuid,
+    origin: item.actor.uuid,
     changes: [{
       key: "system.attributes.ac.bonus",
       mode: CONST.ACTIVE_EFFECT_MODES.ADD,
