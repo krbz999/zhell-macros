@@ -20,7 +20,7 @@ const maps = [
   [Actor, "img"],
   [Actor, "prototypeToken.texture.src"],
   [Macro, "img"],
-  [Table, "img"]
+  [RollTable, "img"]
 ];
 
 // the collection, the embedded collection, what property to update:
