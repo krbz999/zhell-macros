@@ -1,50 +1,40 @@
-// dialog to adjust resources.
-if(!actor) return ui.notifications.warn("You need an actor.");
+// Dialog to adjust resources.
+// Optional compatibility with 'Add a Resource'.
 
-const resources = foundry.utils.duplicate(actor.system.resources);
-const content = `
-<form>
+const a = token?.actor ?? game.user.character;
+if(!a) return ui.notifications.warn("You need a token selected or an actor assigned.");
+
+const data = a.toObject();
+const names = ["primary", "secondary", "tertiary"].map(r => `system.resources.${r}`);
+if(game.modules.get("addar")?.active){
+  const ids = Object.keys(data.flags.addar?.resource ?? {});
+  names.push(...ids.map(id => `flags.addar.resource.${id}`));
+}
+
+const content = names.reduce((acc, name) => {
+  const {label, value, max} = foundry.utils.getProperty(data, name);
+  return acc + `
   <div class="form-group">
-    <label>${resources.primary.label}</label>
+    <label>${label || "Resource"}</label>
     <div class="form-fields">
-      <input type="number" id="primary-v" value="${resources.primary.value}">
+      <input type="number" name="${name}.value" value="${value || 0}">
       <span class="sep"> / </span>
-      <input type="number" id="primary-m" value="${resources.primary.max}">
+      <input type="number" name="${name}.max" value="${max || 0}">
     </div>
-  </div>
-  <div class="form-group">
-    <label>${resources.secondary.label}</label>
-    <div class="form-fields">
-      <input type="number" id="secondary-v" value="${resources.secondary.value}">
-      <span class="sep"> / </span>
-      <input type="number" id="secondary-m" value="${resources.secondary.max}">
-    </div>
-  </div>
-  <div class="form-group">
-    <label>${resources.tertiary.label}</label>
-    <div class="form-fields">
-      <input type="number" id="tertiary-v" value="${resources.tertiary.value}">
-      <span class="sep"> / </span>
-      <input type="number" id="tertiary-m" value="${resources.tertiary.max}">
-    </div>
-  </div>
-</form>`;
-new Dialog({
+  </div>`;
+}, "");
+
+const form = await Dialog.prompt({
   title: "Adjust Resources",
-  content,
-  buttons: {
-    go: {
-      icon: "<i class='fa-solid fa-check'></i>",
-      label: "All Good",
-      callback: async (html) => {
-        resources.primary.value = Number(html[0].querySelector("#primary-v").value);
-        resources.primary.max = Number(html[0].querySelector("#primary-m").value);
-        resources.secondary.value = Number(html[0].querySelector("#secondary-v").value);
-        resources.secondary.max = Number(html[0].querySelector("#secondary-m").value);
-        resources.tertiary.value = Number(html[0].querySelector("#tertiary-v").value);
-        resources.tertiary.max = Number(html[0].querySelector("#tertiary-m").value);
-        return actor.update({ "system.resources": resources });
-      }
-    }
+  content: `<form>${content}</form>`,
+  rejectClose: false,
+  label: "All Good",
+  callback: (html) => {
+    const formData = {};
+    html[0].querySelectorAll("input[type=number]").forEach(input => {
+      formData[input.name] = input.valueAsNumber;
+    });
+    return formData;
   }
-}).render(true);
+});
+if(form) return a.update(form);
