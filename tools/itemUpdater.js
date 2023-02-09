@@ -38,14 +38,20 @@ async function _onDrop(event) {
 
 async function _generateContent() {
   const rows = game.actors.reduce((acc, a) => {
-    const items = a.items.filter(i => i.name === item.name);
+    const items = a.items.filter(i => {
+      return i !== item && i.name === item.name && i.type === item.type;
+    });
     if (!items.length) return acc;
     return acc + items.reduce((abb, i) => {
       return abb + `
       <tr>
         <td>${a.link}</td>
         <td>${i.link}</td>
-        <td><a class="replace-button" data-uuid="${i.uuid}"><i class="fa-solid fa-recycle"></i></a></td>
+        <td>
+          <a class="replace-button" data-uuid="${i.uuid}">
+            <i class="fa-solid fa-recycle"></i>
+          </a>
+        </td>
       </tr>`;
     }, "");
   }, "");
