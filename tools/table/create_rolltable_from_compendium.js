@@ -6,18 +6,17 @@ const tableName = "name of the new table goes here";
 const tableDescription = "description of table goes here";
 
 /* --------------------- */
-const compendium = game.packs.get(collection);
-if(!compendium) return ui.notifications.warn("Your key is invalid.");
-const compendiumIndex = await compendium.getIndex({fields: ["img"]});
+const pack = game.packs.get(collection);
+if(!pack) return ui.notifications.warn("Your key is invalid.");
 
-const results = [...compendiumIndex].map(({name, img, _id}, i) => ({
-  text: name,
+const results = pack.index.map((item, i) => ({
+  text: item.name,
   type: CONST.TABLE_RESULT_TYPES.COMPENDIUM,
   collection,
-  img,
-  resultId: _id,
+  img: item.img,
+  resultId: item._id,
   weight: 1,
-  range: [i+1, i+1],
+  range: [i + 1, i + 1],
   drawn: false
 }));
 
