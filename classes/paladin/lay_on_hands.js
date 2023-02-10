@@ -6,7 +6,7 @@ if(!uses.value) return ui.notifications.warn(`${item.name} has no uses left.`);
 
 const content = `
 <p>Lay on Hands has ${uses.value} uses left.</p>
-<form>
+<form class="dnd5e">
   <div class="form-group">
     <label for="num">Hit points to restore:</label>
     <div class="form-fields">
