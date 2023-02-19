@@ -5,7 +5,7 @@ const data = actor.getRollData();
 const inputs = Object.entries(data.spells).filter(([key, values]) => {
   return values.value > 0;
 }).map(([key, values]) => {
-  const crd = key === "pact" ? "Pact Slot" : CONFIG.DND5E[key.at(-1)];
+  const crd = key === "pact" ? "Pact Slot" : CONFIG.DND5E.spellLevels[key.at(-1)];
   return [key, crd, values];
 });
 if(!inputs.length) return ui.notifications.warn("You have no spell slots remaining.");
