@@ -44,7 +44,7 @@ async function rollDamage(html){
   const level = slot === "pact" ? data.spells["pact"].level : Number(slot.at(-1));
   const dice = Math.min(5, 1 + level) + (extra ? 1 : 0);
   const formula = `${dice}d8`;
-  const feature = await new Item.implementation({
+  const feature = new Item.implementation({
     type: "feat", name: item.name,
     system: {
       damage: {parts: [[formula, "radiant"]]},
@@ -54,5 +54,5 @@ async function rollDamage(html){
   const roll = await feature.rollDamage({event});
   if(!roll) return;
   const value = data.spells[slot].value - 1;
-  return actor.update({ [`system.spells.${slot}.value`]: value });
+  return actor.update({[`system.spells.${slot}.value`]: value});
 }
