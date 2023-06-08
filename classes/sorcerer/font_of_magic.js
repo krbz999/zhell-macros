@@ -3,7 +3,7 @@
 // setup: embed macro in item with limited uses acting as sorcery points.
 
 // Map of slot level to point cost.
-const conversionMap = { 1: 2, 2: 3, 3: 5, 4: 6, 5: 7 };
+const conversionMap = {1: 2, 2: 3, 3: 5, 4: 6, 5: 7};
 const style = `
 <style>
 .font-of-magic .dialog-buttons {
@@ -12,7 +12,7 @@ const style = `
 }
 </style>`;
 const spellPoints = item.system.uses;
-const spellSlots = { ...actor.system.spells };
+const spellSlots = {...actor.system.spells};
 
 // array of spell levels for converting points to slots.
 const validLevelsWithSpentSpellSlots = Object.entries(spellSlots).filter(([key, entry]) => {
@@ -53,7 +53,7 @@ if (canConvertPointsToSlot) buttons["pointToSlot"] = {
   label: "Convert sorcery points to a spell slot",
   callback: pointsToSlot
 }
-new Dialog({ title: item.name, buttons }).render(true);
+new Dialog({title: item.name, buttons}).render(true);
 
 // Convert spell slot to sorcery points.
 async function slotToPoints() {
@@ -81,10 +81,10 @@ async function slotToPoints() {
   });
   if (!retKey) return null;
 
-  await actor.update({ [`system.spells.${retKey}.value`]: spellSlots[retKey].value - 1 });
+  await actor.update({[`system.spells.${retKey}.value`]: spellSlots[retKey].value - 1});
   const level = retKey === "pact" ? spellSlots["pact"].level : retKey.at(-1);
   const newPointsValue = Math.clamped(spellPoints.value + Number(level), 0, spellPoints.max);
-  await item.update({ "system.uses.value": newPointsValue });
+  await item.update({"system.uses.value": newPointsValue});
   return ChatMessage.create({
     speaker,
     content: `${actor.name} regained ${newPointsValue - spellPoints.value} sorcery points.`
@@ -115,9 +115,9 @@ async function pointsToSlot() {
   });
   if (!retKey) return null;
 
-  await actor.update({ [`system.spells.${retKey}.value`]: spellSlots[retKey].value + 1 });
+  await actor.update({[`system.spells.${retKey}.value`]: spellSlots[retKey].value + 1});
   const level = retKey === "pact" ? spellSlots["pact"].level : retKey.at(-1);
-  await item.update({ "system.uses.value": Math.clamped(spellPoints.value - conversionMap[level], 0, spellPoints.max) });
+  await item.update({"system.uses.value": Math.clamped(spellPoints.value - conversionMap[level], 0, spellPoints.max)});
   const str = retKey === "pact" ? "Pact Slot" : `${CONFIG.DND5E.spellLevels[level]} spell slot`;
   return ChatMessage.create({
     speaker,

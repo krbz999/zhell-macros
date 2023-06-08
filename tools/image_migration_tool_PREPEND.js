@@ -50,7 +50,7 @@ for (const m of embedded) await swapEmbedded(...m);
 ui.notifications.info(`MIGRATION COMPLETED! (errors: ${errors})`);
 
 console.log("MISSING FILE PATHS:");
-for(const [doc, prop] of missingFilePaths) console.log(doc, prop);
+for (const [doc, prop] of missingFilePaths) console.log(doc, prop);
 
 async function swap(collection, property) {
   const coll = collection.metadata.collection;

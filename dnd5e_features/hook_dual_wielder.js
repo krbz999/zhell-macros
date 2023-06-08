@@ -16,21 +16,21 @@ Hooks.once("ready", () => {
 const update_feature = async (item, ...rest) => {
   // Only do this for one user; the one doing the update.
   if (game.user.id !== rest.at(-1)) return;
-  
+
   // Must be an owned item and owner must have 'Dual-Wielder' special trait.
   const dualWielder = item.actor?.getFlag("dnd5e", "dualWielder");
   if (!dualWielder) return;
-  
+
   // Get equipped weapons and Dual Wielder effect.
   const equipped = item.actor.itemTypes.weapon.filter(weapon => weapon.system.equipped);
   const effect = item.actor.effects.find(e => e.getFlag("world", "dual-wielder"));
-  
+
   // If not exactly two weapons equipped, delete the effect if it exists.
   if (equipped.length !== 2) return effect?.delete();
-  
+
   // If effect already active, do nothing.
   if (effect) return;
-  
+
   // If exactly two weapons equipped, create the effect.
   return item.actor.createEmbeddedDocuments("ActiveEffect", [{
     icon: "icons/skills/melee/weapons-crossed-swords-white-blue.webp",

@@ -1,12 +1,11 @@
 // Dialog to adjust resources.
 // Optional compatibility with 'Add a Resource'.
 
-const a = token?.actor ?? game.user.character;
-if(!a) return ui.notifications.warn("You need a token selected or an actor assigned.");
+if (!actor) return ui.notifications.warn("You need a token selected or an actor assigned.");
 
-const data = a.toObject();
+const data = actor.toObject();
 const names = ["primary", "secondary", "tertiary"].map(r => `system.resources.${r}`);
-if(game.modules.get("addar")?.active){
+if (game.modules.get("addar")?.active) {
   const ids = Object.keys(data.flags.addar?.resource ?? {});
   names.push(...ids.map(id => `flags.addar.resource.${id}`));
 }
@@ -17,9 +16,9 @@ const content = names.reduce((acc, name) => {
   <div class="form-group">
     <label>${label || "Resource"}</label>
     <div class="form-fields">
-      <input type="number" name="${name}.value" value="${value || 0}">
+      <input type="number" data-dtype="Number" name="${name}.value" value="${value || 0}">
       <span class="sep"> / </span>
-      <input type="number" name="${name}.max" value="${max || 0}">
+      <input type="number" data-dtype="Number" name="${name}.max" value="${max || 0}">
     </div>
   </div>`;
 }, "");
@@ -30,11 +29,7 @@ const form = await Dialog.prompt({
   rejectClose: false,
   label: "All Good",
   callback: (html) => {
-    const formData = {};
-    html[0].querySelectorAll("input[type=number]").forEach(input => {
-      formData[input.name] = input.valueAsNumber;
-    });
-    return formData;
+    const update = new FormDataExtended(html[0].querySelector("form")).object;
+    return actor.update(update);
   }
 });
-if(form) return a.update(form);

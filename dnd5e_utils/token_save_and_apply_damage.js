@@ -4,13 +4,13 @@
  * and each selected NON-PLAYER-OWNED token will roll a save and apply
  * full damage if they fail, or half if they succeed.
  * (toggle for no damage on success too)
- * (Does not take damage resistances into account) 
+ * (Does not take damage resistances into account)
 **/
 
 const tokens = canvas.tokens.controlled.filter(t => !t.actor.hasPlayerOwner);
 if (!tokens.length) return ui.notifications.warn("No valid tokens.");
 const names = tokens.map(i => i.name).join(", ");
-const options = Object.entries(CONFIG.DND5E.abilities).reduce((acc, [a,b]) => {
+const options = Object.entries(CONFIG.DND5E.abilities).reduce((acc, [a, b]) => {
   return acc + `<option value="${a}">${b}</option>`;
 }, "");
 const content = `
@@ -54,10 +54,10 @@ new Dialog({
         if (!dc) return ui.notifications.warn("Invalid DC.");
         if (dmg < 1) return ui.notifications.warn("Invalid damage.");
         for (const t of tokens) {
-          const { total } = await t.actor.rollAbilitySave(type, { event: ev });
+          const {total} = await t.actor.rollAbilitySave(type, {event: ev});
           if (total < dc) await t.actor.applyDamage(dmg);
           else if (no) continue;
-          else await t.actor.applyDamage(Math.floor(dmg/2));
+          else await t.actor.applyDamage(Math.floor(dmg / 2));
         }
       }
     }

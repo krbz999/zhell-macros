@@ -5,7 +5,7 @@ const table = await fromUuid("uuid of table goes here");
 
 // Draw items from compendium or sidebar.
 const receiver = token?.actor;
-if(!table || !receiver){
+if (!table || !receiver) {
   ui.notifications.warn("Missing table or selected token.");
   return null;
 }
@@ -13,7 +13,7 @@ const draw = await table.draw();
 const promises = draw.results.map(i => {
   const key = i.documentCollection;
   const id = i.documentId;
-  const uuid = `Compendium.${key}.${id}`;
+  const uuid = `Compendium.${key}.Item.${id}`;
   return key === "Item" ? game.items.get(id) : fromUuid(uuid);
 });
 const items = await Promise.all(promises);

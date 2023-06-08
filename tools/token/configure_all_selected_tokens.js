@@ -1,6 +1,6 @@
 // single dialog to configure all selected tokens' disposition, displayBars, and displayName configuration.
 
-const { disposition: defdisp, displayBars: defbars, displayName: defname } = token.document;
+const {disposition: defdisp, displayBars: defbars, displayName: defname} = token.document;
 const options_disposition = Object.entries(CONST.TOKEN_DISPOSITIONS).reduce((acc, [key, value]) => {
   const selected = value === defdisp && "selected";
   return acc + `<option value="${value}" ${selected}>${key}</option>`
@@ -40,7 +40,7 @@ new Dialog({
         const displayBars = Number(html[0].querySelector("#display-bars").value);
         const displayName = Number(html[0].querySelector("#display-name").value);
         const updates = canvas.tokens.controlled.map(token => {
-          return { _id: token.id, disposition, displayBars, displayName};
+          return {_id: token.id, disposition, displayBars, displayName};
         });
         await canvas.scene.updateEmbeddedDocuments("Token", updates);
       }

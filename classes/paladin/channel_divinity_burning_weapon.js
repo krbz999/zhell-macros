@@ -11,50 +11,50 @@
 
 const name = "Burning Weapon";
 const hasMutation = warpgate.mutationStack(token.document).getName(name);
-if ( hasMutation ) return warpgate.revert(token.document, name);
+if (hasMutation) return warpgate.revert(token.document, name);
 
 const weapons = actor.itemTypes.weapon.filter(i => i.system.equipped);
-if ( !weapons.length ) return ui.notifications.warn("You have no equipped weapons.");
+if (!weapons.length) return ui.notifications.warn("You have no equipped weapons.");
 
 const use = await item.use();
-if ( !use ) return;
+if (!use) return;
 
 // mutation function:
-async function mutate(weaponId){
-    const weapon = actor.items.get(weaponId);
-    if ( !weapon ) return;
-    const mod = Math.max(1, actor.system.abilities.cha.mod);
-    const damageParts = weapon.system.damage.parts;
-    damageParts[0][0] = `${damageParts[0][0]} + ${mod}[fire]`;
-    
-    await warpgate.mutate(token.document, {
-        token: {
-            light: {
-                bright: 20,
-                dim: 40,
-                color: "#e05d06",
-                "animation.type": "torch"
-            }
-        },
-        embedded: {
-            Item: {
-                [weaponId]: {
-                    system: {
-                        "properties.mgc": true,
-                        "damage.parts": damageParts
-                    }
-                }
-            }
+async function mutate(weaponId) {
+  const weapon = actor.items.get(weaponId);
+  if (!weapon) return;
+  const mod = Math.max(1, actor.system.abilities.cha.mod);
+  const damageParts = weapon.system.damage.parts;
+  damageParts[0][0] = `${damageParts[0][0]} + ${mod}[fire]`;
+
+  await warpgate.mutate(token.document, {
+    token: {
+      light: {
+        bright: 20,
+        dim: 40,
+        color: "#e05d06",
+        "animation.type": "torch"
+      }
+    },
+    embedded: {
+      Item: {
+        [weaponId]: {
+          system: {
+            "properties.mgc": true,
+            "damage.parts": damageParts
+          }
         }
-    }, {}, { name, comparisonKeys: { Item: "_id" } });
+      }
+    }
+  }, {}, {name, comparisonKeys: {Item: "_id"}});
 }
 
 /* exactly one weapon */
-if ( weapons.length === 1 ) return mutate(weapons[0].id);
+if (weapons.length === 1) return mutate(weapons[0].id);
 
 /* multiple weapons */
-const weaponSelect = weapons.reduce((acc, { id, name }) => {
-    return acc + `<option value="${id}">${name}</option>`;
+const weaponSelect = weapons.reduce((acc, {id, name}) => {
+  return acc + `<option value="${id}">${name}</option>`;
 }, "");
 const content = `
 <p>Pick your weapon for ${name}.</p>
@@ -68,16 +68,16 @@ const content = `
 </form>`;
 
 new Dialog({
-    title: name,
-    content,
-    buttons: {
-        go: {
-            icon: "<i class='fas fa-fire'></i>",
-            label: "Flame On!",
-            callback: (html) => {
-                const id = html[0].querySelector("#wpn").value;
-                return mutate(id);
-            }
-        }
+  title: name,
+  content,
+  buttons: {
+    go: {
+      icon: "<i class='fas fa-fire'></i>",
+      label: "Flame On!",
+      callback: (html) => {
+        const id = html[0].querySelector("#wpn").value;
+        return mutate(id);
+      }
     }
+  }
 }).render(true);

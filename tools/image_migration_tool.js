@@ -63,12 +63,12 @@ async function swapEmbedded(collection, embeddedCollection, property) {
 function createMap(docs, property) {
   return docs.map(doc => {
     const prop = foundry.utils.getProperty(doc, property);
-    if (!prop) return { _id: doc.id };
-    return { _id: doc.id, [property]: prop.replace(toReplace, replacement) };
+    if (!prop) return {_id: doc.id};
+    return {_id: doc.id, [property]: prop.replace(toReplace, replacement)};
   })
 }
 
-function error(string, err){
+function error(string, err) {
   console.error(string);
   console.warn(err);
   errors++;

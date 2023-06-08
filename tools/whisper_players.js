@@ -13,7 +13,7 @@ const selectedPlayerIds = canvas.tokens.controlled.map(i => i.actor.id).filter(i
 const options = users.reduce((acc, {id, name, character}) => {
   // should be checked by default.
   const checked = (!!character && selectedPlayerIds.includes(character.id)) ? "selected" : "";
-  
+
   return acc + `<span class="whisper-dialog-player-name ${checked}" id="${id}">${name}</span>`;
 }, `<form><div class="form-fields">`) + `</div></form>`;
 
@@ -47,28 +47,30 @@ new Dialog({
     <label for="message">Message:</label>
     <textarea style="resize: none;" id="message" name="message" rows="6" cols="50"></textarea>
     <hr>`,
-  buttons: {go: {
-    icon: `<i class="fas fa-check"></i>`,
-    label: "Whisper",
-    callback: async (html) => {
-      const whisperIds = new Set();
-      for(let {id} of users){
-        if(!!html[0].querySelector(`span[id="${id}"].selected`)){
-          whisperIds.add(id);
+  buttons: {
+    go: {
+      icon: `<i class="fa-solid fa-check"></i>`,
+      label: "Whisper",
+      callback: async (html) => {
+        const whisperIds = new Set();
+        for (let {id} of users) {
+          if (!!html[0].querySelector(`span[id="${id}"].selected`)) {
+            whisperIds.add(id);
+          }
         }
+        const content = html[0].querySelector("textarea[id=message]").value;
+        if (!whisperIds.size) return;
+        const whisper = Array.from(whisperIds);
+        await ChatMessage.create({content, whisper});
       }
-      const content = html[0].querySelector("textarea[id=message]").value;
-      if(!whisperIds.size) return;
-      const whisper = Array.from(whisperIds);
-      await ChatMessage.create({content, whisper});
     }
-  }},
+  },
   render: (html) => {
     html.css("height", "auto");
-    for(let playerName of html[0].querySelectorAll(".whisper-dialog-player-name")){
-    playerName.addEventListener("click", () => {
-      playerName.classList.toggle("selected");
-    });
-  }
+    for (let playerName of html[0].querySelectorAll(".whisper-dialog-player-name")) {
+      playerName.addEventListener("click", () => {
+        playerName.classList.toggle("selected");
+      });
+    }
   }
 }).render(true);

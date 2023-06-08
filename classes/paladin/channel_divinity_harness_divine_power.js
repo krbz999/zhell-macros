@@ -1,12 +1,12 @@
 // HARNESS DIVINE POWER
 // required modules: itemacro
-// setup: 
+// setup:
 // (1) Place macro in Item Macro on the Harness Divine Power feature.
 // (2) Have Harness Divine Power set up with Limited Uses.
 // (3) Have Harness Divine Power consume Limited Uses of a Channel Divinity item.
 
 const {spells, attributes: {prof}} = foundry.utils.duplicate(actor.system);
-const maxLevel = Math.ceil(prof/2);
+const maxLevel = Math.ceil(prof / 2);
 const validLevels = [];
 for (let i = 1; i <= maxLevel; i++) {
   const key = `spell${i}`;

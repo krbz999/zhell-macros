@@ -1,5 +1,5 @@
 // pop a dialog to pick a scene to activate.
-const options = game.scenes.reduce((acc, { id, name }) => {
+const options = game.scenes.reduce((acc, {id, name}) => {
   return acc + `<option value="${id}">${name}</option>`;
 }, "");
 const content = `
@@ -7,7 +7,7 @@ const content = `
   <div class="form-group">
     <label>Scene</label>
     <div class="form-fields">
-      <select id="scene-select" autofocus>${options}</select>
+      <select autofocus>${options}</select>
     </div>
   </div>
 </form>`;
@@ -19,9 +19,8 @@ new Dialog({
       icon: "<i class='fa-solid fa-check'></i>",
       label: "Activate!",
       callback: async (html) => {
-        const sceneId = html[0].querySelector("#scene-select").value;
-        const scene = game.scenes.get(sceneId);
-        await scene.activate();
+        const sceneId = html[0].querySelector("select").value;
+        return game.scenes.get(sceneId).activate();
       }
     }
   }

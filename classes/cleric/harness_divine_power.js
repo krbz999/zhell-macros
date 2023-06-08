@@ -2,24 +2,24 @@
 // required modules: itemacro
 
 const data = actor.getRollData();
-const maxLevel = Math.ceil(data.attributes.prof/2);
+const maxLevel = Math.ceil(data.attributes.prof / 2);
 const validLevels = [];
-for(let i = 1; i <= maxLevel; i++){
+for (let i = 1; i <= maxLevel; i++) {
   const key = `spell${i}`;
-  if( (data.spells[key].value < data.spells[key].max) && (data.spells[key].max > 0) ){
+  if ((data.spells[key].value < data.spells[key].max) && (data.spells[key].max > 0)) {
     validLevels.push(key);
   }
 }
 const pact = data.spells.pact;
-if( (pact.max > 0) && (pact.level <= maxLevel) && (pact.value < pact.max) ) validLevels.push("pact");
+if ((pact.max > 0) && (pact.level <= maxLevel) && (pact.value < pact.max)) validLevels.push("pact");
 
 // bail out if you are not missing any spell slots or if the item has no remaining uses (limited uses and resources).
-if(!validLevels.length) return ui.notifications.warn("You are not missing any valid spell slots.");
-if(!item.system.uses.value) return ui.notifications.warn("You have no uses left of Harness Divine Power.");
+if (!validLevels.length) return ui.notifications.warn("You are not missing any valid spell slots.");
+if (!item.system.uses.value) return ui.notifications.warn("You have no uses left of Harness Divine Power.");
 
 const resourceItem = actor.items.get(item.system.consume.target);
 const uses = resourceItem.system.uses;
-if(!uses.value) return ui.notifications.warn("You have no uses of Channel Divinity left.");
+if (!uses.value) return ui.notifications.warn("You have no uses of Channel Divinity left.");
 
 // define dialog contents
 const options = validLevels.reduce((acc, e) => {

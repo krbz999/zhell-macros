@@ -2,7 +2,7 @@
 // required modules: itemacro
 
 const uses = item.system.uses;
-if(!uses.value) return ui.notifications.warn(`${item.name} has no uses left.`);
+if (!uses.value) return ui.notifications.warn(`${item.name} has no uses left.`);
 
 const content = `
 <p>Lay on Hands has ${uses.value} uses left.</p>
@@ -21,13 +21,13 @@ const buttons = {
     label: "Heal!",
     callback: async (html) => {
       const number = Number(html[0].querySelector("#num").value);
-      if(!number.between(1, uses.value)) return ui.notifications.warn("Invalid number.");
+      if (!number.between(1, uses.value)) return ui.notifications.warn("Invalid number.");
       await new Roll(`${number}`).toMessage({speaker, flavor: item.name});
       return item.update({"system.uses.value": uses.value - number});
     }
   }
 };
-if(uses.value >= 5){
+if (uses.value >= 5) {
   buttons.cure = {
     icon: "<i class='fa-solid fa-virus'></i>",
     label: "Cure!",

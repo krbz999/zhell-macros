@@ -24,7 +24,7 @@ function _render(html) {
     const uuid = target.dataset.uuid;
     const del = await _replaceItemOnActor(uuid);
     if (del) target.closest("tr").remove();
-    d.setPosition({ height: "auto" });
+    d.setPosition({height: "auto"});
   });
   html[0].querySelector(".drop-location").addEventListener("drop", _onDrop);
 }
@@ -75,9 +75,9 @@ async function _generateContent() {
   </table>`;
 
   const DIV = document.createElement("DIV");
-  DIV.innerHTML = style + await TextEditor.enrichHTML(_content, { async: true });
+  DIV.innerHTML = style + await TextEditor.enrichHTML(_content, {async: true});
   d.element[0].querySelector(".drop-location").replaceWith(...DIV.children);
-  d.setPosition({ height: "auto" });
+  d.setPosition({height: "auto"});
 }
 
 const d = new Dialog({
@@ -92,5 +92,5 @@ const d = new Dialog({
   content: "<input type='text' placeholder='Drop item here' class='drop-location'>"
 }, {
   classes: ["dialog", "find-and-replace"],
-  dragDrop: [{ dragSelector: null, dropSelector: ".drop-location" }]
+  dragDrop: [{dragSelector: null, dropSelector: ".drop-location"}]
 }).render(true);

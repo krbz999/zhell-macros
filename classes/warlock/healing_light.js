@@ -1,18 +1,18 @@
 // Healing Light
 // required modules: itemacro
 
-const { value, max } = item.system.uses;
-const { mod } = actor.system.abilities.cha; // maximum you can spend at once
+const {value, max} = item.system.uses;
+const {mod} = actor.system.abilities.cha; // maximum you can spend at once
 const die = "d6"; // die size
 const target = game.user.targets.first();
 
-if ( value < 1 ) return item.use({}, { configureDialog: false });
+if (value < 1) return item.use({}, {configureDialog: false});
 
-const options = Array.fromRange(Math.min(mod,value)).reduce((acc, e) => {
-  return acc += `<option value="${e+1}">${e+1}${die}</option>`;
+const options = Array.fromRange(Math.min(mod, value), 1).reduce((acc, e) => {
+  return acc += `<option value="${e}">${e}${die}</option>`;
 }, "");
 const content = `
-<form>
+<form class="dnd5e">
   <div class="form-group">
     <label>Number of dice to spend (${value}/${max})</label>
     <div class="form-fields">
@@ -33,9 +33,9 @@ new Dialog({
         const spending = html[0].querySelector("#spend").value;
         await new Roll(`${spending}${die}`).toMessage({
           flavor: `${actor.name} uses ${item.name} ${targetAppend}`,
-          speaker: ChatMessage.getSpeaker({ actor })
+          speaker
         });
-        await item.update({ "system.uses.value": value - spending });
+        return item.update({"system.uses.value": value - spending});
       }
     }
   }

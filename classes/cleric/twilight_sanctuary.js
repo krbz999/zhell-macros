@@ -9,20 +9,20 @@ const target = game.user.targets.first();
 // find Sequencer effect
 const [effect] = Sequencer.EffectManager.getEffects({name: item.name});
 
-if(!effect){
+if (!effect) {
   const use = await item.use();
   if (!use) return;
   return new Sequence()
     .effect()
-      .attachTo(token)
-      .persist()
-      .name(item.name)
-      .file(file)
-      .size(canvas.grid.size * 8)
-      .scaleIn(0, 800, {ease: "easeOutCubic"})
-      .rotateIn(180, 1200, {ease: "easeOutCubic"})
-      .scaleOut(0, 500, {ease: "easeOutCubic"})
-      .fadeOut(500, {ease: "easeOutCubic"});
+    .attachTo(token)
+    .persist()
+    .name(item.name)
+    .file(file)
+    .size(canvas.grid.size * 8)
+    .scaleIn(0, 800, {ease: "easeOutCubic"})
+    .rotateIn(180, 1200, {ease: "easeOutCubic"})
+    .scaleOut(0, 500, {ease: "easeOutCubic"})
+    .fadeOut(500, {ease: "easeOutCubic"})
     .play();
 }
 
@@ -40,7 +40,7 @@ new Dialog({
         const temp = target.actor.system.attributes.hp.temp ?? 0;
         const updates = {actor: {"system.attributes.hp.temp": total}};
         const config = {permanent: true, name: item.name, description: `You are being granted ${total} temporary hit points.`};
-        if(total > temp) return warpgate.mutate(target.document, updates, {}, config);
+        if (total > temp) return warpgate.mutate(target.document, updates, {}, config);
       }
     },
     effect: {

@@ -2,8 +2,8 @@
 // required modules: itemacro
 
 // get spell object and wizard levels.
-const levels = actor.getRollData().classes.wizard.levels;
-const spells = foundry.utils.duplicate(actor.system.spells);
+const levels = actor.classes.wizard.system.levels;
+const spells = foundry.utils.deepClone(actor.system.spells);
 
 // bail out if you can't use this item again.
 const available = item.system.uses.value > 0;
@@ -13,9 +13,9 @@ if (!available) {
 }
 
 // attained spell levels, then mapping to value and max.
-const level_maps = Array.fromRange(6).reduce((acc, i) => {
-  const s = spells[`spell${i+1}`];
-  if(s.max > 0) acc.push(s);
+const level_maps = Array.fromRange(6, 1).reduce((acc, i) => {
+  const s = spells[`spell${i}`];
+  if (s.max > 0) acc.push(s);
   return acc;
 }, []);
 
@@ -60,17 +60,17 @@ const dialog = new Dialog({
           return dialog.render(true);
         }
         for (let i = 0; i < 9; i++) {
-          const selector = `input[name=level${i+1}]:checked`;
+          const selector = `input[name=level${i + 1}]:checked`;
           const val = html[0].querySelectorAll(selector).length;
-          spells[`spell${i+1}`].value = val;
-	}
+          spells[`spell${i + 1}`].value = val;
+        }
         await actor.update({"system.spells": spells});
         ui.notifications.info("Spell slots recovered!");
       }
     }
   },
   render: (html) => {
-    html[0].addEventListener("change", function () {
+    html[0].addEventListener("change", function() {
       const selector = "input:checked:not(:disabled)";
       const inputs = html[0].querySelectorAll(selector);
       spent = Array.from(inputs).reduce((acc, node) => {

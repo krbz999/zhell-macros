@@ -9,11 +9,11 @@ const style = `
 }
 </style>`;
 
-const spells = foundry.utils.duplicate(actor.system.spells);
+const spells = foundry.utils.deepClone(actor.system.spells);
 
 // levels with unspent spell slots.
 const availableSlots = Object.entries(spells).filter(([key, level]) => {
-  return (level.value > 0 && level.max > 0);
+  return (level.value > 0) && (level.max > 0);
 });
 if (!availableSlots.length) {
   ui.notifications.warn("You have no spell slots remaining.");
@@ -21,10 +21,10 @@ if (!availableSlots.length) {
 }
 
 const buttons = availableSlots.reduce((acc, [key]) => {
-  const level = key === "pact" ? spells[key].level : key.at(-1);
-  const label = key === "pact" ? "Pact Slot" : CONFIG.DND5E.spellLevels[level];
+  const level = (key === "pact") ? spells[key].level : key.at(-1);
+  const label = (key === "pact") ? "Pact Slot" : CONFIG.DND5E.spellLevels[level];
   const callback = async () => spendSlot(key, level);
-  acc[key] = { label, callback };
+  acc[key] = {label, callback};
   return acc;
 }, {});
 new Dialog({
@@ -34,11 +34,13 @@ new Dialog({
 }).render(true);
 
 // spend spell slot to reduce by 5 * level
-async function spendSlot(key, level) {
+async function spendSlot(html, event) {
+  const key = event.currentTarget.dataset.button;
+  const level = (key === "pact") ? spells[key].level : key.at(-1);
   spells[key].value--;
   await actor.update({"system.spells": spells});
   return ChatMessage.create({
     content: `${actor.name} reduced the incoming damage by up to ${Number(level) * 5}.`,
-    speaker: ChatMessage.getSpeaker({actor})
+    speaker
   });
 }

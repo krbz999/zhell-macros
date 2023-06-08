@@ -9,19 +9,22 @@ const options = canvas.scene.notes.reduce((acc, e) => {
   if (!e.entryId) label = e.text;
   else if (e.pageId) label = game.journal.get(e.entryId).pages.get(e.pageId).name;
   else label = game.journal.get(e.entryId).name;
-  return acc + `<option value="${e.id}">${label}</option>`;    
+  return acc + `<option value="${e.id}">${label}</option>`;
 }, "");
 const content = `
 <form>
   <div class="form-group">
     <label>Select City:</label>
-    <div class="form-fields"> <select>${options}</select> </div>
+    <div class="form-fields">
+      <select>${options}</select>
+    </div>
   </div>
 </form>`;
 await Dialog.prompt({
   title: "Pan to City",
   content,
   rejectClose: false,
+  label: "Pan to City",
   callback: (html) => {
     const id = html[0].querySelector("select").value;
     const note = canvas.scene.notes.get(id);

@@ -19,14 +19,14 @@ new Dialog({
       label: "Roll it.",
       callback: async (html) => {
         const modifier = html[0].querySelector("input").value;
-        const roll = await new Roll(`1d10xo + ${modifier}`).evaluate({async: true});
-        if(roll.dice[0].results[0].result !== 1){
+        const roll = await new Roll(`1d10xo + ${modifier}`).evaluate();
+        if (roll.dice[0].results[0].result !== 1) {
           return roll.toMessage({
             flavor: "your flavor text here",
             speaker: ChatMessage.getSpeaker()
           });
         }
-        const roll2 = await new Roll(`1d10xo + ${modifier} - 1d10`).evaluate({async: true});
+        const roll2 = await new Roll(`1d10xo + ${modifier} - 1d10`).evaluate();
         roll2.dice[0].results[0] = roll.dice[0].results[0];
         roll2._total = Number(roll2.result);
         await roll2.toMessage({
@@ -61,10 +61,10 @@ new Dialog({
       label: "Roll it",
       callback: async (html) => {
         const modifier = Number(html[0].querySelector("input").value);
-        const roll = await new Roll(`${modifier}d6`).evaluate({async: true});
-        if((modifier === 1) && (roll.total === 6)){
+        const roll = await new Roll(`${modifier}d6`).evaluate();
+        if ((modifier === 1) && (roll.total === 6)) {
           const roll2 = await new Roll("1d6").evaluate({async: true});
-          if(roll2.total !== 6){
+          if (roll2.total !== 6) {
             roll2.dice[0].results[0].active = false;
             roll2.dice[0].results[0].discarded = true;
             roll.dice[0].results.push(roll2.dice[0].results[0]);

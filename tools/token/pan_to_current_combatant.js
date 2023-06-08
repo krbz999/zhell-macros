@@ -14,4 +14,4 @@ if (sheet.rendered) sheet.maximize();
 else sheet.render(true);
 
 current.object.control();
-canvas.animatePan({ x: current.x, y: current.y, duration: 1000 });
+canvas.animatePan({x: current.x, y: current.y, duration: 1000});

@@ -27,13 +27,13 @@ const dialog = new Dialog({
       callback: async (html) => {
         const csv = html[0].querySelector("#csv").value;
         const values = csv.split(",");
-        
+
         // check if the sum is correct.
         const sum = values.reduce((acc, e) => acc += Number(e), 0);
         if (sum !== level + 2) return dialog.render();
         // create the rolls.
         const rolls = await Promise.all(values.map(v => {
-          return new Roll(`${v}d4 + ${v}`).evaluate({ async: true });
+          return new Roll(`${v}d4 + ${v}`).evaluate({async: true});
         }));
         return ChatMessage.create({
           flavor: "Magic Missile - Damage Roll (Force)",

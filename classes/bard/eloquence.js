@@ -1,9 +1,7 @@
 // Eloquence
 // required modules: none
 
-const a = token?.actor ?? game.user.character;
-if(a) return ui.notifications.warn("You must have a selected token or assigned actor.");
-
+if (!actor) return ui.notifications.warn("You must have a selected token or assigned actor.");
 return Dialog.prompt({
   title: "Eloquence",
   content: `
@@ -12,8 +10,8 @@ return Dialog.prompt({
       <label>Select Skill</label>
       <div class="form-fields">
         <select>
-          <option value="per">Persuasion</option>
-          <option value="dec">Deception</option>
+          <option value="per">${CONFIG.DND5E.skills.per.label}</option>
+          <option value="dec">${CONFIG.DND5E.skills.dec.label}</option>
         </select>
       </div>
     </div>
@@ -22,6 +20,6 @@ return Dialog.prompt({
   label: "Roll",
   callback: async (html) => {
     const skill = html[0].querySelector("select").value;
-    return a.rollSkill(skill, {reliableTalent: true, event});
+    return actor.rollSkill(skill, {reliableTalent: true, event});
   }
 });

@@ -7,7 +7,7 @@ const tableDescription = "description of table goes here";
 
 /* --------------------- */
 const pack = game.packs.get(collection);
-if(!pack) return ui.notifications.warn("Your key is invalid.");
+if (!pack) return ui.notifications.warn("Your key is invalid.");
 
 const tableResults = pack.index.map((item, i) => ({
   img: item.img,
