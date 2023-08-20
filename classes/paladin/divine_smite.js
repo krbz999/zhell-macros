@@ -27,7 +27,7 @@ const content = `
 </form>`;
 
 return new Dialog({
-  title: item.name,
+  title: "Divine Smite",
   content,
   buttons: {
     smite: {
@@ -45,7 +45,7 @@ async function rollDamage(html) {
   const dice = Math.min(5, 1 + level) + (extra ? 1 : 0);
   const formula = `${dice}d8`;
   const feature = new Item.implementation({
-    type: "feat", name: item.name,
+    type: "feat", name: "Divine Smite",
     system: {
       damage: {parts: [[formula, "radiant"]]},
       actionType: "util"
