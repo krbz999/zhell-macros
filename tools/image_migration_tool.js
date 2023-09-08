@@ -1,76 +1,78 @@
-// replace parts of a string on properties of documents.
+/**
+ * A script mainly to fix your world when you decide to convert all your assets from one
+ * file type to another. Replace the 'toReplace' and 'replacement' variables for your own
+ * use case and remove the entries in the arrays of the respective document types in the
+ * 'property' object if you want them to be untouched (or add new ones).
+ */
 
 // what to replace and what it should be replaced by:
 const toReplace = ".png";
 const replacement = ".webp";
 
-// the collection and what property is being updated:
-// e.g., [Item, "img"] for img on every item in the directory.
-const maps = [
-  [Item, "img"],
-  [Macro, "img"],
-  [Actor, "img"],
-  [Actor, "prototypeToken.texture.src"],
-  [RollTable, "img"],
-  [Scene, "background.src"]
-];
+// Comment out or remove the document types you do not wish to touch.
+const property = {
+  "ActiveEffect": ["icon"],
+  "Actor": ["img", "prototypeToken.texture.src"],
+  "ActorDelta": ["img"],
+  "Item": ["img"],
+  "JournalEntry": [],
+  "JournalEntryPage": ["src"],
+  "Macro": ["img"],
+  "Note": ["texture.src"],
+  "RollTable": ["img"],
+  "Scene": ["background.src", "foreground"],
+  "TableResult": ["img"],
+  "Tile": ["texture.src"],
+  "Token": ["texture.src"],
+};
 
-// the collection, the embedded collection, what property to update:
-// e.g.: ["items", "effects", "icon"] for the icons on all effects on all items in the directory.
-const embedded = [
-  ["items", "effects", "icon"],
-  ["actors", "items", "img"],
-  ["actors", "effects", "icon"],
-  ["tables", "results", "img"],
-  ["scenes", "tokens", "texture.src"],
-  ["scenes", "tiles", "texture.src"],
-  ["scenes", "notes", "texture.src"],
-  ["journal", "pages", "src"]
-];
+/* ----------------------------- */
 
-// touch nothing below this line.
-let errors = 0;
-ui.notifications.info("MIGRATION BEGUN!");
-for (const m of maps) await swap(...m);
-for (const m of embedded) await swapEmbedded(...m);
-ui.notifications.info(`MIGRATION COMPLETED! (errors: ${errors})`);
+let globalUpdates = 0;
 
-async function swap(collection, property) {
-  const coll = collection.metadata.collection;
-  console.warn(`Replacing ${property} in game.${coll}.`);
-  try {
-    const updates = createMap(game[coll], property);
-    return collection.updateDocuments(updates);
-  } catch (err) {
-    return error(`Error in game.${coll}.`, err);
+async function updateSidebar() {
+  for (const docName in property) {
+    const docClass = getDocumentClass(docName);
+    const collection = game[docClass.metadata.collection];
+    if (!collection) continue;
+    const updates = collection.map(createUpdate);
+    await docClass.updateDocuments(updates);
+    for (const doc of collection) await updateEmbeddedDocumentsRecursively(doc);
   }
 }
 
-async function swapEmbedded(collection, embeddedCollection, property) {
-  console.warn(`Replacing ${property} in ${collection} on ${embeddedCollection}.`);
-  for (const doc of game[collection]) {
-    try {
-      const docs = createMap(doc[embeddedCollection], property);
-      if (!docs.length) continue;
-      const type = doc[embeddedCollection].find(c => c).documentName;
-      await doc.updateEmbeddedDocuments(type, docs);
-    } catch (err) {
-      error(`Error replacing ${property} in game.${collection} (${doc.name}).`, err);
+// create an update for a single document.
+function createUpdate(doc) {
+  const paths = property[doc.documentName];
+  const update = {_id: doc.id};
+  for (const path of paths) {
+    const value = foundry.utils.getProperty(doc, path);
+    if (!value) continue;
+    const newValue = value.replaceAll(toReplace, replacement);
+    if (value !== newValue) {
+      foundry.utils.setProperty(update, path, newValue);
+      globalUpdates++;
+      console.warn(`Updated document ${doc.name ?? doc.label} (${doc.uuid})`);
     }
+
+  }
+  return update;
+}
+
+async function updateEmbeddedDocumentsRecursively(doc) {
+  const embedded = getDocumentClass(doc.documentName).metadata.embedded;
+  for (const key in embedded) {
+    if (!(key in property)) continue;
+    let collection = doc[embedded[key]];
+    const isCollection = collection instanceof foundry.utils.Collection; // really just for 'ActorDelta'
+    if (isCollection) {
+      const embeddedUpdates = collection.map(createUpdate);
+      await doc.updateEmbeddedDocuments(key, embeddedUpdates);
+    } else {
+      collection = [collection];
+    }
+    for (const c of collection) await updateEmbeddedDocumentsRecursively(c);
   }
 }
 
-function createMap(docs, property) {
-  return docs.map(doc => {
-    const prop = foundry.utils.getProperty(doc, property);
-    if (!prop) return {_id: doc.id};
-    return {_id: doc.id, [property]: prop.replace(toReplace, replacement)};
-  })
-}
-
-function error(string, err) {
-  console.error(string);
-  console.warn(err);
-  errors++;
-  return null;
-}
+await updateSidebar();
