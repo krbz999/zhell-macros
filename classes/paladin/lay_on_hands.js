@@ -22,7 +22,13 @@ const buttons = {
     callback: async (html) => {
       const number = Number(html[0].querySelector("input").value);
       if (!number.between(1, uses.value)) return ui.notifications.warn("Invalid number.");
-      await new Roll(`${number}`).toMessage({speaker, flavor: item.name});
+      const clone = item.clone({
+        "system.damage.parts": [[`${number}`, "healing"]],
+        "system.actionType": "heal"
+      }, {keepId: true, parent: actor});
+      clone.prepareData();
+      clone.prepareFinalAttributes();
+      await clone.rollDamage({options: {fastForward: true, critical: false}});
       return item.update({"system.uses.value": uses.value - number});
     }
   },
