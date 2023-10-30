@@ -6,8 +6,12 @@ const tableName = "name of the new table goes here";
 const tableDescription = "description of table goes here";
 
 /* --------------------- */
-const pack = game.packs.get(collection);
-if (!pack) return ui.notifications.warn("Your key is invalid.");
+
+const pack = game.packs.get(compendiumKey);
+if (!pack) {
+  ui.notifications.warn("Your key is invalid.");
+  return null;
+}
 
 const tableResults = pack.index.map((item, i) => ({
   img: item.img,
@@ -20,7 +24,7 @@ const tableResults = pack.index.map((item, i) => ({
   drawn: false
 }));
 
-await RollTable.create({
+await RollTable.implementation.create({
   name: tableName,
   results: tableResults,
   img: tableImg,
