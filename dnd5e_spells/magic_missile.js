@@ -4,19 +4,17 @@
 const use = await item.use();
 if (!use) return;
 
-const div = document.createElement("DIV");
-div.innerHTML = use.content;
-const level = Number(div.firstChild.dataset.spellLevel);
+const spellLevel = use.flags.dnd5e.use.spellLevel;
 
 const dialog = new Dialog({
   title: "Direct your missiles",
-  content: `<p>Write a comma-separated list of numbers adding up to ${level + 2} to roll the missile damage individually on each target.</p>
+  content: `<p>Write a comma-separated list of numbers adding up to ${spellLevel + 2} to roll the missile damage individually on each target.</p>
   <hr>
-  <form>
+  <form class="dnd5e">
     <div class="form-group">
-      <label for="csv">CSV (${level + 2} missiles):</label>
+      <label>CSV (${spellLevel + 2} missiles):</label>
       <div class="form-fields">
-        <input type="text" id="csv" value="${level + 2}">
+        <input type="text" value="${spellLevel + 2}">
       </div>
     </div>
   </form>`,
@@ -24,23 +22,27 @@ const dialog = new Dialog({
     fire: {
       icon: "<i class='fa-solid fa-check'></i>",
       label: "Shoot!",
-      callback: async (html) => {
-        const csv = html[0].querySelector("#csv").value;
+      callback: async ([html]) => {
+        const csv = html.querySelector("INPUT").value;
         const values = csv.split(",");
 
         // check if the sum is correct.
-        const sum = values.reduce((acc, e) => acc += Number(e), 0);
-        if (sum !== level + 2) return dialog.render();
-        // create the rolls.
-        const rolls = await Promise.all(values.map(v => {
-          return new Roll(`${v}d4 + ${v}`).evaluate({async: true});
-        }));
-        return ChatMessage.create({
-          flavor: "Magic Missile - Damage Roll (Force)",
-          speaker: ChatMessage.getSpeaker({actor}),
-          type: CONST.CHAT_MESSAGE_TYPES.ROLL,
-          rolls
-        });
+        const sum = values.reduce((acc, e) => acc + (parseInt(e) || 0), 0);
+        if (sum !== spellLevel + 2) {
+          ui.notifications.warn("Invalid list.");
+          return dialog.render();
+        }
+
+        for (const v of values) {
+          const clone = item.clone({
+            "system.level": spellLevel,
+            "system.damage.parts": [[`${v}d4 + ${v}`]],
+            "system.actionType": "other"
+          }, {keepId: true});
+          clone.prepareData();
+          clone.prepareFinalAttributes();
+          await clone.rollDamage({options: {fastForward: true, critical: false}});
+        }
       }
     }
   }

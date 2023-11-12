@@ -2,7 +2,10 @@
 // required modules: itemacro
 
 const uses = item.system.uses;
-if (!uses.value) return ui.notifications.warn(`${item.name} has no uses left.`);
+if (!uses.value) {
+  ui.notifications.warn(`${item.name} has no uses left.`);
+  return null;
+}
 
 const content = `
 <p>Lay on Hands has ${uses.value} uses left.</p>
@@ -19,13 +22,16 @@ const buttons = {
   heal: {
     icon: "<i class='fa-solid fa-hand-holding-heart'></i>",
     label: "Heal!",
-    callback: async (html) => {
-      const number = Number(html[0].querySelector("input").value);
-      if (!number.between(1, uses.value)) return ui.notifications.warn("Invalid number.");
+    callback: async ([html]) => {
+      const number = parseInt(html.querySelector("input").value) || 0;
+      if (!number.between(1, uses.value)) {
+        ui.notifications.warn("Invalid number.");
+        return null;
+      }
       const clone = item.clone({
         "system.damage.parts": [[`${number}`, "healing"]],
         "system.actionType": "heal"
-      }, {keepId: true, parent: actor});
+      }, {keepId: true});
       clone.prepareData();
       clone.prepareFinalAttributes();
       await clone.rollDamage({options: {fastForward: true, critical: false}});
@@ -36,8 +42,11 @@ const buttons = {
     condition: uses.value >= 5,
     icon: "<i class='fa-solid fa-virus'></i>",
     label: "Cure!",
-    callback: async (html) => {
-      await ChatMessage.create({content: `${actor.name} cures a disease or poison.`, speaker});
+    callback: async () => {
+      await ChatMessage.implementation.create({
+        content: `${actor.name} cures a disease or poison.`,
+        speaker
+      });
       return item.update({"system.uses.value": uses.value - 5});
     }
   }

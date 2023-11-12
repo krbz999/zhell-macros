@@ -1,41 +1,47 @@
 // Healing Light
 // required modules: itemacro
 
-const {value, max} = item.system.uses;
-const {mod} = actor.system.abilities.cha; // maximum you can spend at once
+const uses = item.system.uses;
+const cha = actor.system.abilities.cha; // maximum you can spend at once
 const die = "d6"; // die size
-const target = game.user.targets.first();
 
-if (value < 1) return item.use({}, {configureDialog: false});
+if (!uses.value) {
+  ui.notifications.warn("You do not have any remaining uses.");
+  return null;
+}
 
-const options = Array.fromRange(Math.min(mod, value), 1).reduce((acc, e) => {
+const options = Array.fromRange(Math.min(cha.mod, uses.value), 1).reduce((acc, e) => {
   return acc += `<option value="${e}">${e}${die}</option>`;
 }, "");
 const content = `
 <form class="dnd5e">
   <div class="form-group">
-    <label>Number of dice to spend (${value}/${max})</label>
+    <label>Number of dice to spend (${uses.value}/${uses.max})</label>
     <div class="form-fields">
-      <select id="spend">${options}</select>
+      <select name="spend">${options}</select>
     </div>
   </div>
 </form>`;
 
 new Dialog({
-  content,
+  content: content,
   title: "Healing Light",
   buttons: {
     go: {
-      icon: "<i class='fas fa-check'></i>",
+      icon: "<i class='fa-solid fa-check'></i>",
       label: "Heal",
-      callback: async (html) => {
-        const targetAppend = target ? `on ${target.name}` : "";
-        const spending = html[0].querySelector("#spend").value;
-        await new Roll(`${spending}${die}`).toMessage({
-          flavor: `${actor.name} uses ${item.name} ${targetAppend}`,
-          speaker
-        });
-        return item.update({"system.uses.value": value - spending});
+      callback: async ([html]) => {
+        const spending = parseInt(html.querySelector("SELECT").value) || 0;
+
+        const clone = item.clone({
+          "system.damage.parts": [[`${spending}${die}`, "healing"]],
+          "system.actionType": "heal"
+        }, {keepId: true});
+        clone.prepareData();
+        clone.prepareFinalAttributes();
+
+        await clone.rollDamage({options: {fastForward: true, critical: false}});
+        return item.update({"system.uses.value": uses.value - spending});
       }
     }
   }
