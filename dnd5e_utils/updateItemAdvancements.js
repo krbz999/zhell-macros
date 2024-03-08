@@ -22,7 +22,7 @@ for (const item of classes) {
 async function updateAdv(item, adv, key) {
   const items = [];
   for (const oldUuid of adv.configuration[key]) {
-    const newUuid = await getNewUuid(oldUuid);
+    const newUuid = await getNewUuid(item, oldUuid);
     if (newUuid) items.push(newUuid);
   }
   return item.updateAdvancement(adv.id, {configuration: {[key]: items}});
