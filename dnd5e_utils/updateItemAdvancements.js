@@ -10,7 +10,7 @@ const keyClasses = "key of compendium with classes";
 const keyFeatures = "key of compendium with NEW features";
 
 // Change nothing below this comment.
-const classes = await game.packs.get(keyClasses).getDocuments();
+const classes = await game.packs.get(keyClasses).getDocuments({type: "class"});
 for (const item of classes) {
   for (const adv of item.system.advancement) {
     const key = {ItemGrant: "items", ItemChoice: "pool"}[adv.type];
