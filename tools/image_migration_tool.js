@@ -11,19 +11,19 @@ const replacement = ".webp";
 
 // Comment out or remove the document types you do not wish to touch.
 const property = {
-  "ActiveEffect": ["icon"],
   "Actor": ["img", "prototypeToken.texture.src"],
-  "ActorDelta": ["img"],
   "Item": ["img"],
+  "ActiveEffect": ["img"],
+  "Scene": ["background.src", "foreground"],
+  "Token": ["texture.src"],
+  "ActorDelta": ["img"],
+  "Tile": ["texture.src"],
+  "Note": ["texture.src"],
   "JournalEntry": [],
   "JournalEntryPage": ["src"],
   "Macro": ["img"],
-  "Note": ["texture.src"],
   "RollTable": ["img"],
-  "Scene": ["background.src", "foreground"],
-  "TableResult": ["img"],
-  "Tile": ["texture.src"],
-  "Token": ["texture.src"],
+  "TableResult": ["img"]
 };
 
 /* ----------------------------- */
@@ -31,7 +31,7 @@ const property = {
 let globalUpdates = 0;
 
 async function updateSidebar() {
-  for (const docName in property) {
+  for (const docName of Object.keys(property)) {
     const docClass = getDocumentClass(docName);
     const collection = game[docClass.metadata.collection];
     if (!collection) continue;
@@ -52,20 +52,19 @@ function createUpdate(doc) {
     if (value !== newValue) {
       foundry.utils.setProperty(update, path, newValue);
       globalUpdates++;
-      console.warn(`Updated document ${doc.name ?? doc.label} (${doc.uuid})`);
+      console.warn(`Updated document ${doc.name ?? ""} (${doc.uuid})`);
     }
-
   }
   return update;
 }
 
 async function updateEmbeddedDocumentsRecursively(doc) {
   const embedded = getDocumentClass(doc.documentName).metadata.embedded;
-  for (const key in embedded) {
+  for (const key of Object.keys(embedded)) {
     if (!(key in property)) continue;
-    let collection = doc[embedded[key]];
-    const isCollection = collection instanceof foundry.utils.Collection; // really just for 'ActorDelta'
-    if (isCollection) {
+    let collection = doc.getEmbeddedCollection(key);
+    if (collection instanceof foundry.utils.Collection) {
+      // really just for 'ActorDelta'
       const embeddedUpdates = collection.map(createUpdate);
       await doc.updateEmbeddedDocuments(key, embeddedUpdates);
     } else {
