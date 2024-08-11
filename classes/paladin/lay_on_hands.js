@@ -4,51 +4,55 @@
 const uses = item.system.uses;
 if (!uses.value) {
   ui.notifications.warn(`${item.name} has no uses left.`);
-  return null;
+  return;
 }
 
-const content = `
-<p>Lay on Hands has ${uses.value} uses left.</p>
-<form class="dnd5e">
-  <div class="form-group">
-    <label>Hit points to restore:</label>
-    <div class="form-fields">
-      <input type="number" value="1" autofocus min="1" max="${uses.value}">
-    </div>
-  </div>
-</form>`;
+const input = new foundry.data.fields.NumberField({
+  min: 1,
+  step: 1,
+  max: uses.value,
+  label: "Charges"
+}).toFormGroup({}, {name: "loh", value: 1}).outerHTML;
 
-const buttons = {
-  heal: {
-    icon: "<i class='fa-solid fa-hand-holding-heart'></i>",
-    label: "Heal!",
-    callback: async ([html]) => {
-      const number = parseInt(html.querySelector("input").value) || 0;
-      if (!number.between(1, uses.value)) {
-        ui.notifications.warn("Invalid number.");
-        return null;
-      }
-      const clone = item.clone({
-        "system.damage.parts": [[`${number}`, "healing"]],
-        "system.actionType": "heal"
-      }, {keepId: true});
-      clone.prepareData();
-      clone.prepareFinalAttributes();
-      await clone.rollDamage({options: {fastForward: true, critical: false}});
-      return item.update({"system.uses.value": uses.value - number});
-    }
-  },
-  cure: {
-    condition: uses.value >= 5,
-    icon: "<i class='fa-solid fa-virus'></i>",
-    label: "Cure!",
-    callback: async () => {
-      await ChatMessage.implementation.create({
-        content: `${actor.name} cures a disease or poison.`,
-        speaker
-      });
-      return item.update({"system.uses.value": uses.value - 5});
-    }
+const content = `
+<fieldset>
+  <legend>Lay on Hands</legend>
+  <p class="hint">Lay on Hands has ${uses.value} uses left. You can expend a number of charges to heal someone, or expend 5 charges to cure a disease or poison.</p>
+  ${input}
+</fieldset>`;
+
+const buttons = [{
+  action: "heal",
+  icon: "fa-solid fa-fw fa-hand-holding-heart",
+  label: "Heal!",
+  callback: async (event, button, html) => {
+    const number = Number(button.form.elements.loh.value);
+    await new CONFIG.Dice.DamageRoll(String(number), {}, {type: "healing"}).toMessage({
+      flavor: "Lay on Hands",
+      speaker: ChatMessage.implementation.getSpeaker({actor: actor})
+    });
+    return item.update({"system.uses.value": uses.value - number});
   }
-};
-return new Dialog({title: item.name, content, buttons}).render(true);
+}];
+
+if (uses.value >= 5) buttons.push({
+  action: "cure",
+  icon: "fa-solid fa-fw fa-virus",
+  label: "Cure!",
+  callback: async (event, button, html) => {
+    await ChatMessage.implementation.create({
+      content: `${actor.name} cures a disease or poison.`,
+      speaker: ChatMessage.implementation.getSpeaker({actor: actor})
+    });
+    return item.update({"system.uses.value": uses.value - 5});
+  }
+});
+
+foundry.applications.api.DialogV2.wait({
+  buttons: buttons,
+  content: content,
+  rejectClose: false,
+  modal: true,
+  position: {width: 400, height: "auto"},
+  window: {title: "Lay on Hands", icon: "fa-hand-holding-heart"}
+});
