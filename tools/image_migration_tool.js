@@ -11,67 +11,65 @@ const replacement = ".webp";
 
 // Comment out or remove the document types you do not wish to touch.
 const property = {
-  "Actor": ["img", "prototypeToken.texture.src"],
-  "Item": ["img"],
-  "ActiveEffect": ["img"],
-  "Scene": ["background.src", "foreground"],
-  "Token": ["texture.src"],
-  "ActorDelta": ["img"],
-  "Tile": ["texture.src"],
-  "Note": ["texture.src"],
-  "JournalEntry": [],
-  "JournalEntryPage": ["src"],
-  "Macro": ["img"],
-  "RollTable": ["img"],
-  "TableResult": ["img"]
+  ActiveEffect: ["img"],
+  Actor: ["img", "prototypeToken.texture.src"],
+  AmbientLight: [],
+  AmbientSound: [],
+  Card: [],
+  Cards: [],
+  Item: ["img"],
+  JournalEntry: [],
+  JournalEntryPage: ["src"],
+  Macro: ["img"],
+  Note: ["texture.src"],
+  Playlist: [],
+  PlaylistSound: [],
+  RollTable: ["img"],
+  Scene: ["background.src", "foreground"],
+  TableResult: ["img"],
+  Tile: ["texture.src"],
+  Token: ["texture.src"],
+  User: []
 };
 
 /* ----------------------------- */
 
 let globalUpdates = 0;
 
-async function updateSidebar() {
-  for (const docName of Object.keys(property)) {
-    const docClass = getDocumentClass(docName);
-    const collection = game[docClass.metadata.collection];
-    if (!collection) continue;
-    const updates = collection.map(createUpdate);
-    await docClass.updateDocuments(updates);
-    for (const doc of collection) await updateEmbeddedDocumentsRecursively(doc);
+for (const collection of game.collections) {
+  for (const document of collection) {
+    await performUpdate(document);
+    for (const [, embedded] of document.traverseEmbeddedDocuments()) {
+      await performUpdate(embedded);
+    }
   }
 }
 
-// create an update for a single document.
-function createUpdate(doc) {
-  const paths = property[doc.documentName];
-  const update = {_id: doc.id};
-  for (const path of paths) {
-    const value = foundry.utils.getProperty(doc, path);
-    if (!value) continue;
-    const newValue = value.replaceAll(toReplace, replacement);
-    if (value !== newValue) {
-      foundry.utils.setProperty(update, path, newValue);
+async function performUpdate(document) {
+  try {
+    const paths = property[document.documentName] ?? [];
+    const update = {};
+
+    const source = document.toObject();
+
+    for (const path of paths) {
+      const value = foundry.utils.getProperty(source, path);
+      if (!value) continue;
+      const walue = value.replaceAll(toReplace, replacement);
+      if (value !== walue) foundry.utils.setProperty(update, path, walue);
+    }
+
+    if (!foundry.utils.isEmpty(update)) {
+      update._id = document.id;
       globalUpdates++;
-      console.warn(`Updated document ${doc.name ?? ""} (${doc.uuid})`);
+      console.warn(`Updated ${document.documentName} '${document.name || document.id}' (${document.uuid}).`);
+      return document.update(update);
     }
+  } catch(err) {
+    console.error(`Unable to update ${document.documentName} '${document.name || document.id}' (${document.uuid}).`);
+    console.error(err);
   }
-  return update;
+  return document;
 }
 
-async function updateEmbeddedDocumentsRecursively(doc) {
-  const embedded = getDocumentClass(doc.documentName).metadata.embedded;
-  for (const key of Object.keys(embedded)) {
-    if (!(key in property)) continue;
-    let collection = doc.getEmbeddedCollection(key);
-    if (collection instanceof foundry.utils.Collection) {
-      // really just for 'ActorDelta'
-      const embeddedUpdates = collection.map(createUpdate);
-      await doc.updateEmbeddedDocuments(key, embeddedUpdates);
-    } else {
-      collection = [collection];
-    }
-    for (const c of collection) await updateEmbeddedDocumentsRecursively(c);
-  }
-}
-
-await updateSidebar();
+ui.notifications.info(`COMPLETED UPDATE OF ${globalUpdates} DOCUMENTS.`);
