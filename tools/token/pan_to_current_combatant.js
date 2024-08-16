@@ -3,9 +3,10 @@
 // maximizes or opens the sheet of the current combatant
 // and selects and pans over to their token.
 
-Object.values(ui.windows).filter(w => {
-  return w.document?.documentName.includes("Actor");
-}).forEach(w => w.minimize());
+
+for (const w of Object.values(ui.windows).concat(foundry.applications.instances.values())) {
+  if (w.document?.documentName === "Actor") w.minimize();
+}
 
 const current = game.combat.combatant.token;
 const sheet = current.actor.sheet;
