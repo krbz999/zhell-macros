@@ -1,8 +1,10 @@
 /**
  * A script mainly to fix your world when you decide to convert all your assets from one
- * file type to another. Replace the 'toReplace' and 'replacement' variables for your own
- * use case and remove the entries in the arrays of the respective document types in the
- * 'property' object if you want them to be untouched (or add new ones).
+ * file type to another or after reorganizing your image and sound assets.
+ *
+ * Replace the 'toReplace' and 'replacement' variables for your own use case and remove
+ * the entries in the arrays of the respective document types in the 'property' object if
+ * you want them to be untouched (or add new ones).
  */
 
 // what to replace and what it should be replaced by:
