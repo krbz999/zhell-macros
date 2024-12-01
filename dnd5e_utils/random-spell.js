@@ -4,36 +4,35 @@
  */
 
 // The spell levels. Use 0 for cantrips.
-const levels = [0, 1, 2, 3, 4];
+const levels = new Set([0, 1, 2, 3, 4]);
 
 /* ----------------------------------------------------- */
 
-const name = `Random Spell (${CONFIG.DND5E.spellLevels[level]})`;
 const spells = await dnd5e.applications.CompendiumBrowser.fetch(Item, {
-  types: new Set(["spell"]),
   filters: [{k: "system.level", o: "in", v: levels}],
   index: false,
-  sort: true
+  sort: true,
+  types: new Set(["spell"]),
 });
 
 const resultData = [];
 for (const [i, spell] of spells.entries()) {
   resultData.push({
-    range: [i + 1, i + 1],
-    weight: 1,
-    documentId: spell.id,
     documentCollection: spell.pack,
+    documentId: spell.id,
     drawn: false,
     img: spell.img,
+    range: [i + 1, i + 1],
     text: spell.name,
     type: CONST.TABLE_RESULT_TYPES.COMPENDIUM,
+    weight: 1,
   });
 }
 
 const table = new RollTable.implementation({
-  name: name,
+  formula: `1d${resultData.length}`,
+  name: "Random Spell",
   results: resultData,
-  formula: `1d${resultData.length}`
 });
 
 table.draw();
