@@ -29,9 +29,11 @@ dataset.ability ||= CONFIG.DND5E.skills[dataset.skill].ability;
 const chatData = {
   user: game.user.id,
   content: await renderTemplate("systems/dnd5e/templates/chat/request-card.hbs", {
-    buttonLabel: dnd5e.enrichers.createRollLabel({...dataset, format: "short", icon: true}),
-    hiddenLabel: dnd5e.enrichers.createRollLabel({...dataset, format: "short", icon: true, hideDC: true}),
-    dataset: {...dataset, action: "rollRequest", visibility: "all"}
+    buttons: [{
+      buttonLabel: dnd5e.enrichers.createRollLabel({...dataset, format: "short", icon: true}),
+      hiddenLabel: dnd5e.enrichers.createRollLabel({...dataset, format: "short", icon: true, hideDC: true}),
+      dataset: {...dataset, action: "rollRequest", visibility: "all"},
+    }]
   }),
   flavor: game.i18n.localize("EDITOR.DND5E.Inline.RollRequest"),
   speaker: ChatMessage.implementation.getSpeaker({user: game.user})
