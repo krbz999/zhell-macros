@@ -5,7 +5,7 @@ const tools = Array.from((await dnd5e.documents.Trait.choices("tool")).asSet()).
 /* ----------------------------------- */
 
 const checkAbility = foundry.applications.fields.createSelectInput({ options: [{value: "", label: ""}, { rule: true }].concat(abilities), name: "check.ability" });
-const checkSkills = foundry.applications.fields.createMultiSelectInput({ options: skills name: "check.skill" });
+const checkSkills = foundry.applications.fields.createMultiSelectInput({ options: skills, name: "check.skill" });
 const checkTools = foundry.applications.fields.createMultiSelectInput({ options: tools, name: "check.tool" });
 const saveAbility = foundry.applications.fields.createMultiSelectInput({ options: abilities, name: "save.ability" });
 const saveConcentration = foundry.applications.fields.createCheckboxInput({ name: "save.concentration" });
