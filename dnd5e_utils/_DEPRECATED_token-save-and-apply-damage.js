@@ -1,65 +1,41 @@
 /**
- * Takes all selected tokens, pops a dialog, pick save type,
- * input damage and DC, hold a modifier key if you want to (shift, alt, ctrl),
- * and each selected NON-PLAYER-OWNED token will roll a save and apply
- * full damage if they fail, or half if they succeed.
- * (toggle for no damage on success too)
- * (Does not take damage resistances into account)
-**/
+ * Find the latest damage roll in chat. From that message, find a Save activity.
+ * Then, loop through each selected token and prompt a saving throw using the properties of that activity,
+ * and apply damage accordingly.
+ */
 
-const tokens = canvas.tokens.controlled.filter(t => !t.actor.hasPlayerOwner);
-if (!tokens.length) return ui.notifications.warn("No valid tokens.");
-const names = tokens.map(i => i.name).join(", ");
-const options = Object.entries(CONFIG.DND5E.abilities).reduce((acc, [a, b]) => {
-  return acc + `<option value="${a}">${b}</option>`;
-}, "");
-const content = `
-<p>Roll saves and apply damage to: ${names}.</p>
-<form>
-  <div class="form-group">
-    <label for="type">Saving Throw</label>
-    <div class="form-fields">
-      <select id="type">${options}</select>
-    </div>
-  </div>
-  <div class="form-group">
-    <label for="dc">Difficulty</label>
-    <div class="form-fields">
-      <input id="dc" type="number" min="1" step="1.0"></input>
-    </div>
-  </div>
-  <div class="form-group">
-    <label for="dmg">Damage</label>
-    <div class="form-fields">
-      <input id="dmg" type="number"></input>
-      <input id="no" type="checkbox"></input>
-      <label for="no">No&nbsp;damage&nbsp;on&nbsp;success?</label>
-    </div>
-  </div>
-</form>`;
+const message = game.messages.contents.reverse().find(message => message.flags.dnd5e?.roll?.type === "damage");
+if (!message) {
+  ui.notifications.warn("Did not find any recent damage rolls in chat.");
+  return;
+}
 
-new Dialog({
-  title: "Request Saving Throw",
-  content,
-  buttons: {
-    go: {
-      icon: "<i class='fa-solid fa-check'></i>",
-      label: "Save!",
-      callback: async (html) => {
-        const ev = event;
-        const type = html[0].querySelector("#type").value;
-        const dc = Number(html[0].querySelector("#dc").value);
-        const dmg = Number(html[0].querySelector("#dmg").value);
-        const no = html[0].querySelector("#no").checked;
-        if (!dc) return ui.notifications.warn("Invalid DC.");
-        if (dmg < 1) return ui.notifications.warn("Invalid damage.");
-        for (const t of tokens) {
-          const {total} = await t.actor.rollAbilitySave(type, {event: ev});
-          if (total < dc) await t.actor.applyDamage(dmg);
-          else if (no) continue;
-          else await t.actor.applyDamage(Math.floor(dmg / 2));
-        }
-      }
-    }
-  }
-}).render(true);
+const activity = await fromUuid(message.flags.dnd5e?.activity?.uuid);
+if (activity?.type !== "save") {
+  ui.notifications.warn("Did not find a valid Save activity from latest damage roll.");
+  return;
+}
+
+const ability = activity.save.ability.first();
+const dc = activity.save.dc.value;
+const onSave = activity.damage.onSave === "none" ? 0 : activity.damage.onSave === "half" ? 0.5 : 1;
+
+const damages = dnd5e.dice.aggregateDamageRolls(message.rolls, {respectProperties: true}).map(roll => ({
+  value: roll.total,
+  type: roll.options.type,
+  properties: new Set(roll.options.properties ?? []),
+}));
+
+const actors = new Set();
+for (const token of canvas.tokens.controlled) {
+  if (!token.actor || actors.has(token.actor)) continue;
+  if (!token.actor.system.attributes?.hp?.value) continue;
+  actors.add(token.actor);
+
+  let multiplier = 1;
+  await canvas.animatePan(token.center);
+  const [roll] = await token.actor.rollSavingThrow({ ability, target: dc });
+  if (!roll) continue;
+  if (roll.total >= dc) multiplier *= onSave;
+  await token.actor.applyDamage(damages, { multiplier });
+}
