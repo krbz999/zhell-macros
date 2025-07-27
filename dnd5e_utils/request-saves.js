@@ -1,12 +1,28 @@
 // Request a saving throw (possibly concentration).
 
 const { BooleanField, NumberField, SetField, StringField } = foundry.data.fields;
+const { renderTemplate } = foundry.applications.handlebars;
+const { FormDataExtended } = foundry.applications.ux;
+const Cls = foundry.utils.getDocumentClass("ChatMessage");
+const { createRollLabel } = dnd5e.enrichers;
+const { Dialog } = foundry.applications.api;
 
-const ability = new SetField(new StringField({ choices: CONFIG.DND5E.abilities })).toFormGroup({ label: "Ability" }, { name: "ability", type: "checkboxes" }).outerHTML;
-const dc = new NumberField({ min: 0, max: 30, integer: true, nullable: false, label: "DC" }).toFormGroup({}, { name: "dc", value: 10 }).outerHTML;
-const isConc = new BooleanField({ label: "Concentration", hint: "Is this a save for concentration?" }).toFormGroup({}, { name: "concentration" }).outerHTML;
+const ability = new SetField(new StringField({ choices: CONFIG.DND5E.abilities })).toFormGroup(
+  { label: game.i18n.localize("DND5E.Ability") },
+  { name: "ability", type: "checkboxes" },
+).outerHTML;
 
-foundry.applications.api.Dialog.prompt({
+const dc = new NumberField({ nullable: false, integer: true }).toFormGroup(
+  { label: game.i18n.localize("DND5E.AbbreviationDC") },
+  { name: "dc", value: 10, min: 0, max: 30 },
+).outerHTML;
+
+const isConc = new BooleanField().toFormGroup(
+  { label: game.i18n.localize("DND5E.Concentration"), hint: "Is this a save for concentration?" },
+  { name: "concentration" },
+).outerHTML;
+
+Dialog.prompt({
   content: [ability, dc, isConc].join(""),
   window: { title: "Request Saving Throw" },
   position: { width: 400, height: "auto" },
@@ -14,7 +30,7 @@ foundry.applications.api.Dialog.prompt({
 });
 
 async function callback(event, button, dialog) {
-  const dataset = foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(button.form).object);
+  const dataset = foundry.utils.expandObject(new FormDataExtended(button.form).object);
   if (!dataset.ability.length) return;
 
   const buttons = dataset.ability.map(ability => {
@@ -27,18 +43,17 @@ async function callback(event, button, dialog) {
     };
 
     return {
-      buttonLabel: dnd5e.enrichers.createRollLabel({ ...data, format: "short", icon: true }),
-      hiddenLabel: dnd5e.enrichers.createRollLabel({ ...data, format: "short", icon: true, hideDC: true }),
+      buttonLabel: createRollLabel({ ...data, format: "short", icon: true }),
+      hiddenLabel: createRollLabel({ ...data, format: "short", icon: true, hideDC: true }),
       dataset: data,
     };
   });
   
-  dataset.type = dataset.concentration ? "concentration" : "save";
   const chatData = {
     user: game.user.id,
-    content: await foundry.applications.handlebars.renderTemplate("systems/dnd5e/templates/chat/request-card.hbs", { buttons }),
+    content: await renderTemplate("systems/dnd5e/templates/chat/request-card.hbs", { buttons }),
     flavor: game.i18n.localize("EDITOR.DND5E.Inline.RollRequest"),
-    speaker: ChatMessage.implementation.getSpeaker({ user: game.user }),
+    speaker: Cls.getSpeaker({ user: game.user }),
   };
-  await getDocumentClass("ChatMessage").create(chatData);
+  await Cls.create(chatData);
 }
