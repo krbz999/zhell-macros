@@ -4,7 +4,7 @@
 // and selects and pans over to their token.
 
 
-for (const w of Object.values(ui.windows).concat(foundry.applications.instances.values())) {
+for (const w of Object.values(ui.windows).concat([...foundry.applications.instances.values()].filter(app => app.hasFrame))) {
   if (w.document?.documentName === "Actor") w.minimize();
 }
 
