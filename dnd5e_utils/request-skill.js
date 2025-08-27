@@ -1,41 +1,40 @@
 /**
  * Prompts a dialog for a GM to request a skill check, then creates a chat message players can click.
- * This emulates the system functionality entirely.
+ * Requires dnd5e 5.1.0 or higher and having a primary party configured.
  */
 
-const ability = new foundry.data.fields.StringField({
-  required: false, choices: CONFIG.DND5E.abilities, label: "Ability"
-}).toFormGroup({}, {name: "ability"}).outerHTML;
-const skill = new foundry.data.fields.StringField({
-  required: true, choices: CONFIG.DND5E.skills, label: "Skill"
-}).toFormGroup({}, {name: "skill"}).outerHTML;
-const dc = new foundry.data.fields.NumberField({
-  min: 0, max: 30, integer: true, nullable: false, label: "DC"
-}).toFormGroup({}, {name: "dc", value: 10}).outerHTML;
+const { BooleanField, SetField, StringField, ForeignDocumentField, NumberField } = foundry.data.fields;
+const members = Array.from(game.actors.party.system.members).map(({ actor }) => ({ value: actor.id, label: actor.name }));
 
-const dataset = await foundry.applications.api.DialogV2.prompt({
-  content: `<fieldset>${[ability, skill, dc].join("")}</fieldset>`,
-  rejectClose: false,
-  modal: true,
-  window: {title: "Request Skill Check"},
-  position: {width: 400, height: "auto"},
-  ok: {callback: (event, button) => new FormDataExtended(button.form).object}
+const ability = new StringField().toFormGroup(
+  { label: "Ability" },
+  { blank: false, choices: CONFIG.DND5E.abilities, name: "ability" },
+);
+const skill = new StringField().toFormGroup(
+  { label: "Skill" },
+  { blank: false, choices: CONFIG.DND5E.skills, name: "skill" },
+);
+const target = new NumberField({ nullable: false }).toFormGroup(
+  { label: "Difficulty" },
+  { value: 15, min: 1, max: 30, name: "target", step: 1 },
+);
+const actors = new SetField(new StringField()).toFormGroup(
+  { label: "Actors", classes: ["stacked"] },
+  { options: members, name: "actors", value: members.map(m => m.value), type: "checkboxes" },
+);
+
+const result = await foundry.applications.api.Dialog.input({
+  window: { title: "Request Skill Check" },
+  content: [ability, skill, target, actors].map(field => field.outerHTML).join(""),
 });
-if (!dataset) return;
+if (!result?.actors.length) return;
 
-dataset.type = "skill";
-dataset.ability ||= CONFIG.DND5E.skills[dataset.skill].ability;
-
-const chatData = {
-  user: game.user.id,
-  content: await renderTemplate("systems/dnd5e/templates/chat/request-card.hbs", {
-    buttons: [{
-      buttonLabel: dnd5e.enrichers.createRollLabel({...dataset, format: "short", icon: true}),
-      hiddenLabel: dnd5e.enrichers.createRollLabel({...dataset, format: "short", icon: true, hideDC: true}),
-      dataset: {...dataset, action: "rollRequest", visibility: "all"},
-    }]
-  }),
-  flavor: game.i18n.localize("EDITOR.DND5E.Inline.RollRequest"),
-  speaker: ChatMessage.implementation.getSpeaker({user: game.user})
-};
-await ChatMessage.implementation.create(chatData);
+await ChatMessage.implementation.create({
+  type: "request",
+  flavor: `DC ${result.target} ${CONFIG.DND5E.abilities[result.ability].label} (${CONFIG.DND5E.skills[result.skill].label})`,
+  system: {
+    handler: "skill",
+    data: { ability: result.ability, skill: result.skill, target: result.target },
+    targets: result.actors.map(id => ({ actor: game.actors.get(id).uuid })),
+  },
+});
