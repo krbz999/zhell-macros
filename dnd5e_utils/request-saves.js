@@ -51,7 +51,7 @@ async function callback(event, button, dialog) {
   
   const chatData = {
     user: game.user.id,
-    content: await renderTemplate("systems/dnd5e/templates/chat/request-card.hbs", { buttons }),
+    content: await renderTemplate("systems/dnd5e/templates/chat/roll-request-card.hbs", { buttons }),
     flavor: game.i18n.localize("EDITOR.DND5E.Inline.RollRequest"),
     speaker: Cls.getSpeaker({ user: game.user }),
   };
