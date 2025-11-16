@@ -14,7 +14,7 @@ const replacement = ".webp";
 // Comment out or remove the document types you do not wish to touch.
 const property = {
   ActiveEffect: ["img"],
-  Actor: ["img", "prototypeToken.texture.src"],
+  Actor: ["img", "prototypeToken.texture.src", "prototypeToken.ring.subject.texture"],
   AmbientLight: [],
   AmbientSound: [],
   Card: [],
@@ -25,13 +25,13 @@ const property = {
   Macro: ["img"],
   Note: ["texture.src"],
   Playlist: [],
-  PlaylistSound: [],
+  PlaylistSound: ["path"],
   RollTable: ["img"],
   Scene: ["background.src", "foreground"],
   TableResult: ["img"],
   Tile: ["texture.src"],
-  Token: ["texture.src"],
-  User: []
+  Token: ["texture.src", "ring.subject.texture"],
+  User: ["img"],
 };
 
 /* ----------------------------- */
