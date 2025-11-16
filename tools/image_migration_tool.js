@@ -56,9 +56,9 @@ async function performUpdate(document) {
 
     for (const path of paths) {
       const value = foundry.utils.getProperty(source, path);
-      if (!value) continue;
-      const walue = value.replaceAll(toReplace, replacement);
-      if (value !== walue) foundry.utils.setProperty(update, path, walue);
+      if (!value || (await srcExists(value))) continue;
+      const replaced = value.replaceAll(toReplace, replacement);
+      if (value !== replaced) foundry.utils.setProperty(update, path, replaced);
     }
 
     if (!foundry.utils.isEmpty(update)) {
