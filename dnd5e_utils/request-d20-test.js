@@ -31,23 +31,30 @@ const html = `
 ${fg(dc, "Difficulty")}`;
 
 async function callback(event, button) {
-  const data = foundry.utils.expandObject(new FormDataExtended(button.form).object);
+  const data = foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(button.form).object);
+  const el = document.createElement(foundry.applications.elements.HTMLEnrichedContentElement.tagName);
+  el.classList.add("hidden");
+  el.setAttribute("enricher", "dnd5e-enricher");
 
   const btn = document.createElement("A");
   btn.classList.add("enricher-action");
-  btn.dataset.action = "request";
+  btn.dataset.action = "postRequest";
 
   const span = document.createElement("SPAN");
   span.classList.add("roll-link-group");
-  span.classList.add("hidden");
   span.dataset.type = button.dataset.action;
   span.dataset.dc = Number(data.dc);
+  span.dataset.request = true;
+  span.dataset.format = "long";
   span.insertAdjacentElement("beforeend", btn);
 
   // CHECK
   if (button.dataset.action === "check") {
     if (data.check.ability) span.dataset.ability = data.check.ability;
-    if (data.check.tool.length) span.dataset.tool = data.check.tool.join("|");
+    if (data.check.tool.length) {
+      span.dataset.tool = data.check.tool.join("|");
+      span.dataset.usingTool = span.dataset.tool;
+    }
     if (data.check.tool.length === 1 && !data.check.ability) span.dataset.ability = CONFIG.DND5E.tools[data.check.tool[0]].ability;
     if (data.check.skill.length) span.dataset.skill = data.check.skill.join("|");
   }
@@ -58,13 +65,14 @@ async function callback(event, button) {
     else if (!data.save.ability.length) return;
     if (data.save.ability.length) span.dataset.ability = data.save.ability.join("|");
   }
-  
-  button.insertAdjacentElement("afterend", span);
+
+  el.insertAdjacentElement("beforeend", span);
+  button.insertAdjacentElement("afterend", el);
   btn.click();
-  span.remove();
+  el.remove();
 }
 
-foundry.applications.api.DialogV2.wait({
+foundry.applications.api.Dialog.wait({
   content: html,
   form: { closeOnSubmit: false },
   position: { width: 550, height: "auto" },
