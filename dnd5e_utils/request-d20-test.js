@@ -32,44 +32,34 @@ ${fg(dc, "Difficulty")}`;
 
 async function callback(event, button) {
   const data = foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(button.form).object);
-  const el = document.createElement(foundry.applications.elements.HTMLEnrichedContentElement.tagName);
-  el.classList.add("hidden");
-  el.setAttribute("enricher", "dnd5e-enricher");
 
-  const btn = document.createElement("A");
-  btn.classList.add("enricher-action");
-  btn.dataset.action = "postRequest";
-
-  const span = document.createElement("SPAN");
-  span.classList.add("roll-link-group");
-  span.dataset.type = button.dataset.action;
-  span.dataset.dc = Number(data.dc);
-  span.dataset.request = true;
-  span.dataset.format = "long";
-  span.insertAdjacentElement("beforeend", btn);
+  const parts = [];
 
   // CHECK
   if (button.dataset.action === "check") {
-    if (data.check.ability) span.dataset.ability = data.check.ability;
-    if (data.check.tool.length) {
-      span.dataset.tool = data.check.tool.join("|");
-      span.dataset.usingTool = span.dataset.tool;
-    }
-    if (data.check.tool.length === 1 && !data.check.ability) span.dataset.ability = CONFIG.DND5E.tools[data.check.tool[0]].ability;
-    if (data.check.skill.length) span.dataset.skill = data.check.skill.join("|");
+    parts.push("/check");
+    parts.push(data.check.ability)
+    parts.push(data.check.tool.join("|"));
+    parts.push(data.check.skill.join("|"));
   }
 
   // SAVE
   else if (button.dataset.action === "save") {
-    if (data.save.concentration) span.dataset.type = "concentration";
-    else if (!data.save.ability.length) return;
-    if (data.save.ability.length) span.dataset.ability = data.save.ability.join("|");
+    parts.push("/save");
+    parts.push(data.save.concentration && "concentration");
+    parts.push(data.save.ability.join("|"));
   }
 
-  el.insertAdjacentElement("beforeend", span);
-  button.insertAdjacentElement("afterend", el);
-  btn.click();
-  el.remove();
+  parts.push(data.dc);
+
+  const string = `[[${parts.filterJoin(" ")}]]`;
+  const htmlString = await CONFIG.ux.TextEditor.enrichHTML(string);
+  const html = foundry.utils.parseHTML(htmlString);
+  html.classList.add("hidden");
+  
+  button.insertAdjacentElement("afterend", html);
+  html.querySelector("[data-action=postRequest]").click();
+  html.remove();
 }
 
 foundry.applications.api.Dialog.wait({
